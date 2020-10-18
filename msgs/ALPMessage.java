@@ -1,5 +1,5 @@
 
-
+package msgs;
 
 public class ALPMessage {
     private byte[] payload;

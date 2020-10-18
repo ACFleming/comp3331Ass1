@@ -10,6 +10,7 @@ public class Client  {
         }
 
         Boolean alive = true;
+        
 
         while(alive){
 
