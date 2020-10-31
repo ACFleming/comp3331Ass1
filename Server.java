@@ -19,13 +19,13 @@ public class Server extends Thread {
 
     private boolean alive;
     private Socket socket;
-    private DataInputStream in_from_client;
-    private DataOutputStream out_to_client;
+    private BufferedReader in_from_client;
+    private BufferedWriter out_to_client;
 
     public Server(Socket s) throws IOException {
         this.socket = s;
-        in_from_client = new DataInputStream(socket.getInputStream());
-        out_to_client = new DataOutputStream(socket.getOutputStream());
+        in_from_client = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out_to_client = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {
@@ -63,45 +63,46 @@ public class Server extends Thread {
 
             System.out.println(TerminalText.CLIENT_CNCT.getText());
 
-            out_to_client.writeBytes("Test1\n");
-            out_to_client.writeBytes("Test2\n");
-
+            out_to_client.write("Test1");
+            out_to_client.flush();
+            out_to_client.write("Test2");
+            out_to_client.newLine();    
 
             String username = "error";
             boolean logged_in = false;
             while(!logged_in){
-                out_to_client.writeBytes(TerminalText.USNM_PROMPT.getText());
-                username = in_from_client.readUTF();
+                out_to_client.write(TerminalText.USNM_PROMPT.getText());
+                username = in_from_client.readLine();
                 if(user_pass.containsKey(username)){
                     System.out.println("VALID USERNAME");
-                    out_to_client.writeBytes(TerminalText.PSWD_PROMPT.getText());
-                    if(user_pass.get(username).equals(in_from_client.readUTF())){
+                    out_to_client.write(TerminalText.PSWD_PROMPT.getText());
+                    if(user_pass.get(username).equals(in_from_client.readLine())){
                         logged_in = true;
                     }else{
-                        out_to_client.writeBytes(TerminalText.PSWD_FAIL.getText());
+                        out_to_client.write(TerminalText.PSWD_FAIL.getText());
                         System.out.println(TerminalText.PSWD_FAIL.getText());
                     }
                 }else{
                     System.out.println(TerminalText.NEW_USER.getText());
-                    out_to_client.writeBytes(TerminalText.NEW_PSWD.getText(username));
-                    credentials.add(username + " " + in_from_client.readUTF());
+                    out_to_client.write(TerminalText.NEW_PSWD.getText(username));
+                    credentials.add(username + " " + in_from_client.readLine());
                     writeOutString("./credentials.txt", credentials);
                     logged_in = true;
 
                 }
             }                        
             System.out.println(TerminalText.LOGIN_SUCC.getText(username));
-            out_to_client.writeBytes(TerminalText.WELCOME.getText());
-            in_from_client.readUTF();
+            out_to_client.write(TerminalText.WELCOME.getText());
+            in_from_client.readLine();
 
 
             String cmd = "";
             while(!cmd.equals("quit")){
-                out_to_client.writeBytes(TerminalText.CMD_PROMPT.getText());
-                cmd = in_from_client.readUTF();
+                out_to_client.write(TerminalText.CMD_PROMPT.getText());
+                cmd = in_from_client.readLine();
 
             }
-            out_to_client.writeBytes("DONE");
+            out_to_client.write("DONE");
             System.out.println("DONE");
 
         } catch (FileNotFoundException e) {
