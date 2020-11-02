@@ -21,17 +21,17 @@ public class Server extends Thread {
 
     private boolean alive;
     private Socket socket;
-    private ObjectInputStream in_from_client;
-    private ObjectOutputStream out_to_client;
+    private BufferedReader in_from_client;
+    private DataOutputStream out_to_client;
     private ALPMessage msg_out = new ALPMessage();
     private ALPMessage msg_in = new ALPMessage();
 
 
     public Server(Socket s) throws IOException {
         this.socket = s;
-        out_to_client = new ObjectOutputStream(socket.getOutputStream());
+        out_to_client = new DataOutputStream(socket.getOutputStream());
         out_to_client.flush();
-        in_from_client = new ObjectInputStream(socket.getInputStream());
+        in_from_client = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         
     }
 
@@ -75,24 +75,34 @@ public class Server extends Thread {
             
             boolean logged_in = false;
             while(!logged_in){
+                // read(in_from_client,msg_in);
                 read(in_from_client,msg_in);
-
+                // System.out.println("MSGIN:" +msg_in);
                 if(user_pass.containsKey(msg_in.getUser())){
-                    msg_out.setCommand(Command.NEED_PASSWORD);
-                    send(out_to_client,msg_out);
+                    System.out.println("Need Password");
+                    System.out.println(msg_in.getUser());
+                    msg_out.setCommand("NEED_PASSWORD");
+                    send(out_to_client,msg_out);                    
                     read(in_from_client,msg_in);
+                    // read(in_from_client,msg_in);
+
+                    // System.out.println("Username is: " + msg_in.getUser());
+
                     if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
+                        System.out.println("Correct Password");
                         logged_in = true;
-                        msg_out.setCommand(Command.LOGIN_COMPLETE);
+                        msg_out.setCommand("LOGIN_COMPLETE");
                         send(out_to_client,msg_out);
 
 
                     }else{
-                        msg_out.setCommand(Command.LOGIN_FAIL);
+                        System.out.println("Wrong Password");
+                        msg_out.setCommand("LOGIN_FAil");
                         send(out_to_client,msg_out);
                     }
                 }else{
-                    msg_out.setCommand(Command.NEW_USER);
+                    System.out.println("New User");
+                    msg_out.setCommand("NEW_USER");
                     send(out_to_client,msg_out);
                 }
             }
@@ -182,18 +192,18 @@ public class Server extends Thread {
     }
 
 
-    public static void send(ObjectOutputStream out,ALPMessage msg_out) throws IOException {
-        out.writeObject(msg_out);
+    public static void send(DataOutputStream out,ALPMessage msg) throws IOException {
+        System.out.println("MSGOUT:" +msg);
+        
+        out.writeBytes(msg.toString() + "\n");
         out.flush();
     }
 
 
-    public static void read(ObjectInputStream in, ALPMessage msg) throws ClassNotFoundException, IOException {
-        ALPMessage temp =  (ALPMessage)in.readObject();
-        msg.setArgs(temp.getArgs());
-        msg.setUser(temp.getUser());
-        msg.setCommand(temp.getCommand());
-        msg.setPayload(temp.getPayload());
+    public static void read(BufferedReader in, ALPMessage msg) throws ClassNotFoundException, IOException {
+        String temp = in.readLine();
+        msg.fromString(temp);
+        System.out.println("MSGIN:" +msg);
         
 
     }

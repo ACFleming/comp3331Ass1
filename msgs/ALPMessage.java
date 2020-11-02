@@ -16,9 +16,9 @@ public class ALPMessage implements Serializable{
     private String arg2;
 
     private String user;
-    private Command command;
+    private String command;
 
-    public ALPMessage(Command command, String user, ArrayList<String> args, byte[] payload) {
+    public ALPMessage(String command, String user, ArrayList<String> args, byte[] payload) {
         this.setPayload(payload);
         this.setArgs(args);
         this.setUser(user);
@@ -29,6 +29,12 @@ public class ALPMessage implements Serializable{
 
 
     public ALPMessage() {
+        this.setPayload(null);
+        this.setArgs("arg", 0);
+        this.setArgs("arg1", 1);;
+        this.setArgs("arg2", 2);;
+        this.setUser("Internal");
+        this.setCommand("Unused");
     }
     
 
@@ -93,16 +99,28 @@ public class ALPMessage implements Serializable{
         }
     }
 
-    public Command getCommand() {
+    public String getCommand() {
         return this.command;
     }
 
-    public void setCommand(Command command) {
+    public void setCommand(String command) {
         this.command = command;
     }
 
+    @Override
+    public String toString() {
+        return this.user +  " " + this.arg0 + " " +  this.arg1 +" " + this.arg2 +" " + this.command.toString();
+    }
 
+    public void fromString(String input){
+        String[] list = input.split(" ");
+        this.setUser(list[0]);
+        this.setArgs(list[1], 0);
+        this.setArgs(list[2],1);
+        this.setArgs(list[3], 2);
+        this.setCommand(list[4]);
 
+    }
 
 }
 
