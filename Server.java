@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
+import msgs.*;
+
 
 
 
@@ -19,13 +21,18 @@ public class Server extends Thread {
 
     private boolean alive;
     private Socket socket;
-    private BufferedReader in_from_client;
-    private BufferedWriter out_to_client;
+    private ObjectInputStream in_from_client;
+    private ObjectOutputStream out_to_client;
+    private ALPMessage msg_out = new ALPMessage();
+    private ALPMessage msg_in = new ALPMessage();
+
 
     public Server(Socket s) throws IOException {
         this.socket = s;
-        in_from_client = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out_to_client = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        out_to_client = new ObjectOutputStream(socket.getOutputStream());
+        out_to_client.flush();
+        in_from_client = new ObjectInputStream(socket.getInputStream());
+        
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {
@@ -51,7 +58,7 @@ public class Server extends Thread {
 
     @Override
     public void run() {
-        // TODO Auto-generated method stub
+
         try {
             List<String> credentials = readInText("./credentials.txt");
             String[] retval;
@@ -63,52 +70,78 @@ public class Server extends Thread {
 
             System.out.println(TerminalText.CLIENT_CNCT.getText());
 
-            out_to_client.write("Test1");
-            out_to_client.flush();
-            out_to_client.write("Test2");
-            out_to_client.newLine();    
 
-            String username = "error";
+            
+            
             boolean logged_in = false;
             while(!logged_in){
-                out_to_client.write(TerminalText.USNM_PROMPT.getText());
-                username = in_from_client.readLine();
-                if(user_pass.containsKey(username)){
-                    System.out.println("VALID USERNAME");
-                    out_to_client.write(TerminalText.PSWD_PROMPT.getText());
-                    if(user_pass.get(username).equals(in_from_client.readLine())){
+                read(in_from_client,msg_in);
+
+                if(user_pass.containsKey(msg_in.getUser())){
+                    msg_out.setCommand(Command.NEED_PASSWORD);
+                    send(out_to_client,msg_out);
+                    read(in_from_client,msg_in);
+                    if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
                         logged_in = true;
+                        msg_out.setCommand(Command.LOGIN_COMPLETE);
+                        send(out_to_client,msg_out);
+
+
                     }else{
-                        out_to_client.write(TerminalText.PSWD_FAIL.getText());
-                        System.out.println(TerminalText.PSWD_FAIL.getText());
+                        msg_out.setCommand(Command.LOGIN_FAIL);
+                        send(out_to_client,msg_out);
                     }
                 }else{
-                    System.out.println(TerminalText.NEW_USER.getText());
-                    out_to_client.write(TerminalText.NEW_PSWD.getText(username));
-                    credentials.add(username + " " + in_from_client.readLine());
-                    writeOutString("./credentials.txt", credentials);
-                    logged_in = true;
-
+                    msg_out.setCommand(Command.NEW_USER);
+                    send(out_to_client,msg_out);
                 }
-            }                        
-            System.out.println(TerminalText.LOGIN_SUCC.getText(username));
-            out_to_client.write(TerminalText.WELCOME.getText());
-            in_from_client.readLine();
-
-
-            String cmd = "";
-            while(!cmd.equals("quit")){
-                out_to_client.write(TerminalText.CMD_PROMPT.getText());
-                cmd = in_from_client.readLine();
-
             }
-            out_to_client.write("DONE");
-            System.out.println("DONE");
+            System.out.println("LOGGED IN");
+            // String username = "error";
+            // boolean logged_in = false;
+            // while(!logged_in){
+                
+            //     out_to_client.write(TerminalText.USNM_PROMPT.getText());
+            //     username = in_from_client.readLine();
+            //     if(user_pass.containsKey(username)){
+            //         System.out.println("VALID USERNAME");
+            //         out_to_client.write(TerminalText.PSWD_PROMPT.getText());
+            //         if(user_pass.get(username).equals(in_from_client.readLine())){
+            //             logged_in = true;
+            //         }else{
+            //             out_to_client.write(TerminalText.PSWD_FAIL.getText());
+            //             System.out.println(TerminalText.PSWD_FAIL.getText());
+            //         }
+            //     }else{
+            //         System.out.println(TerminalText.NEW_USER.getText());
+            //         out_to_client.write(TerminalText.NEW_PSWD.getText(username));
+            //         credentials.add(username + " " + in_from_client.readLine());
+            //         writeOutString("./credentials.txt", credentials);
+            //         logged_in = true;
+
+            //     }
+            // }                        
+            // System.out.println(TerminalText.LOGIN_SUCC.getText(username));
+            // out_to_client.write(TerminalText.WELCOME.getText());
+            // in_from_client.readLine();
+
+
+            // String cmd = "";
+            // while(!cmd.equals("quit")){
+            //     out_to_client.write(TerminalText.CMD_PROMPT.getText());
+            //     cmd = in_from_client.readLine();
+
+            // }
+            // out_to_client.write("DONE");
+            // System.out.println("DONE");
 
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -149,4 +182,19 @@ public class Server extends Thread {
     }
 
 
+    public static void send(ObjectOutputStream out,ALPMessage msg_out) throws IOException {
+        out.writeObject(msg_out);
+        out.flush();
+    }
+
+
+    public static void read(ObjectInputStream in, ALPMessage msg) throws ClassNotFoundException, IOException {
+        ALPMessage temp =  (ALPMessage)in.readObject();
+        msg.setArgs(temp.getArgs());
+        msg.setUser(temp.getUser());
+        msg.setCommand(temp.getCommand());
+        msg.setPayload(temp.getPayload());
+        
+
+    }
 }

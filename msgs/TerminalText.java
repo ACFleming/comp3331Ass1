@@ -1,4 +1,4 @@
-// import java.util.Hashtable;
+package msgs;
 
 public enum TerminalText {
     
