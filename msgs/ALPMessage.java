@@ -107,6 +107,10 @@ public class ALPMessage implements Serializable{
         this.command = command;
     }
 
+    public void setCommand(Command cmd){
+        this.command = cmd.toString();
+    }
+
     @Override
     public String toString() {
         return this.user +  " " + this.arg0 + " " +  this.arg1 +" " + this.arg2 +" " + this.command.toString();

@@ -11,6 +11,7 @@ public enum TerminalText {
     CMD_PROMPT("Enter one of the following commands:(quit) :"),
     FILE_DWN("%s downloaded from thread %s"),
     FILE_UPD("%s uploaded file %s to thread %s"),
+    INV_CMD("Invalid command"),
     LIST_THREAD("The list of active threads"),
     LOGIN_SUCC("%s Successful Login"),
     NEW_PSWD("Enter the new password for %s: "),

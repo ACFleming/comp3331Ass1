@@ -32,14 +32,14 @@ public class Client  {
             boolean logged_in = false;
             while(!logged_in){
                 System.out.print(TerminalText.USNM_PROMPT.getText());
-                msg_out.setCommand("LOGIN_USERNAME");
+                msg_out.setCommand(Command.LOGIN_USERNAME);
                 msg_out.setUser(in_from_user.readLine());
                 send(out_to_server,msg_out);
                 read(in_from_server,msg_in);
-                if(msg_in.getCommand().equals("NEED_PASSWORD") || msg_in.getCommand().equals("NEW_USER")){
+                if(msg_in.getCommand().equals(Command.NEED_PASSWORD.toString()) || msg_in.getCommand().equals(Command.NEW_USER.toString())){
                     System.out.print(TerminalText.PSWD_PROMPT.getText());
                     
-                    msg_out.setCommand("LOGIN_PASSWORD");
+                    msg_out.setCommand(Command.LOGIN_PASSWORD);
                     String pass = in_from_user.readLine();
                     msg_out.setArgs(pass, 0);
                     
@@ -47,16 +47,32 @@ public class Client  {
                     read(in_from_server,msg_in);
 
                 }
-                if(msg_in.getCommand().equals("LOGIN_COMPLETE")){
+                if(msg_in.getCommand().equals(Command.LOGIN_COMPLETE.toString())){
                     System.out.println(TerminalText.WELCOME.getText());
                     logged_in = true;
                     break;
                 }
-                if(msg_in.getCommand().equals("LOGIN_FAIL")){
+                if(msg_in.getCommand().equals(Command.LOGIN_FAIL.toString())){
                     System.out.println(TerminalText.PSWD_FAIL);
                 }
             }
-            System.out.println(TerminalText.CMD_PROMPT.getText());
+            while(logged_in){
+                System.out.println(TerminalText.CMD_PROMPT.getText());
+                String[] cmd_args = in_from_user.readLine().split(" ");
+                System.out.print(cmd_args[0]);
+                if(cmd_args[0].equals(Command.CRT.toString())){
+                    msg_out.setCommand(Command.CRT);
+                    msg_out.setArgs(cmd_args[1], 0);
+                    send(out_to_server,msg_out);
+                }else{
+                    System.out.println(TerminalText.INV_CMD.getText());
+                }
+                read(in_from_server,msg_in);
+                if(msg_in.getCommand().equals(Command.ERROR.toString())){
+                    System.out.println(msg_in.getArgs(0));
+                }
+            }
+            
             alive = false;
 
 

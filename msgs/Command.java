@@ -8,6 +8,22 @@ public enum Command {
     NEED_PASSWORD,
     LOGIN_COMPLETE,
     LOGIN_FAIL,
+    UNUSED,
+    CRT,
+    MSG,
+    DLT,
+    EDT,
+    LST,
+    RDT,
+    UPD,
+    DWN,
+    RMV,
+    XIT,
+    SHT,
+    ERROR;
+    
+
+
 
 
 }

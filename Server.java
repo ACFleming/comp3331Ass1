@@ -81,7 +81,7 @@ public class Server extends Thread {
                 if(user_pass.containsKey(msg_in.getUser())){
                     System.out.println("Need Password");
                     System.out.println(msg_in.getUser());
-                    msg_out.setCommand("NEED_PASSWORD");
+                    msg_out.setCommand(Command.NEED_PASSWORD);
                     send(out_to_client,msg_out);                    
                     read(in_from_client,msg_in);
                     // read(in_from_client,msg_in);
@@ -91,59 +91,43 @@ public class Server extends Thread {
                     if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
                         System.out.println("Correct Password");
                         logged_in = true;
-                        msg_out.setCommand("LOGIN_COMPLETE");
+                        msg_out.setCommand(Command.LOGIN_COMPLETE);
                         send(out_to_client,msg_out);
 
 
                     }else{
                         System.out.println("Wrong Password");
-                        msg_out.setCommand("LOGIN_FAil");
+                        msg_out.setCommand(Command.LOGIN_FAIL);
                         send(out_to_client,msg_out);
                     }
                 }else{
                     System.out.println("New User");
-                    msg_out.setCommand("NEW_USER");
+                    msg_out.setCommand(Command.NEW_USER);
                     send(out_to_client,msg_out);
                 }
             }
+            String pathname;
             System.out.println("LOGGED IN");
-            // String username = "error";
-            // boolean logged_in = false;
-            // while(!logged_in){
-                
-            //     out_to_client.write(TerminalText.USNM_PROMPT.getText());
-            //     username = in_from_client.readLine();
-            //     if(user_pass.containsKey(username)){
-            //         System.out.println("VALID USERNAME");
-            //         out_to_client.write(TerminalText.PSWD_PROMPT.getText());
-            //         if(user_pass.get(username).equals(in_from_client.readLine())){
-            //             logged_in = true;
-            //         }else{
-            //             out_to_client.write(TerminalText.PSWD_FAIL.getText());
-            //             System.out.println(TerminalText.PSWD_FAIL.getText());
-            //         }
-            //     }else{
-            //         System.out.println(TerminalText.NEW_USER.getText());
-            //         out_to_client.write(TerminalText.NEW_PSWD.getText(username));
-            //         credentials.add(username + " " + in_from_client.readLine());
-            //         writeOutString("./credentials.txt", credentials);
-            //         logged_in = true;
+            while(logged_in){
+                read(in_from_client,msg_in);
+                System.out.println("GOT MESSAGE");
+                if(msg_in.getCommand().equals(Command.CRT.toString())){
+                    pathname = "./" + msg_in.getArgs(0) + ".txt";
+                    File new_file = new File(pathname);
+                    if(new_file.createNewFile()){
+                        System.out.println("New file at: " + pathname);
+                        List<String> text = new ArrayList<String>();
+                        text.add("NEWFILE");
+                        writeOutString(pathname, text);
+                    }else{
+                        System.out.println("Existing file at: " + pathname);
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs("File already exists", 0);
 
-            //     }
-            // }                        
-            // System.out.println(TerminalText.LOGIN_SUCC.getText(username));
-            // out_to_client.write(TerminalText.WELCOME.getText());
-            // in_from_client.readLine();
+                    }
+                }
+            }
 
-
-            // String cmd = "";
-            // while(!cmd.equals("quit")){
-            //     out_to_client.write(TerminalText.CMD_PROMPT.getText());
-            //     cmd = in_from_client.readLine();
-
-            // }
-            // out_to_client.write("DONE");
-            // System.out.println("DONE");
 
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
