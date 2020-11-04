@@ -20,7 +20,8 @@ public enum Command {
     RMV,
     XIT,
     SHT,
-    ERROR;
+    ERROR,
+    SUCCESS;
     
 
 

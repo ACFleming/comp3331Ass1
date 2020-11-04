@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import msgs.*;
 
@@ -18,6 +19,8 @@ public class Server extends Thread {
     private static Boolean shutdown = false;
     private static Hashtable<String,String> user_pass;
     private static List<Server> server_list;
+
+    public static String cred_path_name = "./credentials.txt";
 
     private boolean alive;
     private Socket socket;
@@ -60,7 +63,7 @@ public class Server extends Thread {
     public void run() {
 
         try {
-            List<String> credentials = readInText("./credentials.txt");
+            List<String> credentials = readInText(cred_path_name);
             String[] retval;
             Iterator<String> it = credentials.iterator();
             while(it.hasNext()){
@@ -85,9 +88,7 @@ public class Server extends Thread {
                     send(out_to_client,msg_out);                    
                     read(in_from_client,msg_in);
                     // read(in_from_client,msg_in);
-
                     // System.out.println("Username is: " + msg_in.getUser());
-
                     if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
                         System.out.println("Correct Password");
                         logged_in = true;
@@ -104,6 +105,15 @@ public class Server extends Thread {
                     System.out.println("New User");
                     msg_out.setCommand(Command.NEW_USER);
                     send(out_to_client,msg_out);
+                    read(in_from_client,msg_in);
+                    credentials.add(msg_in.getUser()+ " " + msg_in.getArgs(0));
+                    user_pass.put(msg_in.getUser(), msg_in.getArgs(0));
+                    writeOutString(cred_path_name, credentials);
+                    logged_in = true;
+                    msg_out.setCommand(Command.LOGIN_COMPLETE);
+                    send(out_to_client,msg_out);
+
+
                 }
             }
             String pathname;
@@ -119,10 +129,13 @@ public class Server extends Thread {
                         List<String> text = new ArrayList<String>();
                         text.add("NEWFILE");
                         writeOutString(pathname, text);
+                        msg_out.setCommand(Command.SUCCESS);
+                        send(out_to_client,msg_out);
                     }else{
                         System.out.println("Existing file at: " + pathname);
                         msg_out.setCommand(Command.ERROR);
-                        msg_out.setArgs("File already exists", 0);
+                        msg_out.setArgs(TerminalText.FILE_EXIST.getText(pathname), 0);
+                        send(out_to_client,msg_out);
 
                     }
                 }
@@ -156,7 +169,11 @@ public class Server extends Thread {
         Scanner sc = new Scanner(file);
         List<String> text = new ArrayList<String>();
         while(sc.hasNextLine()){
-            text.add(sc.nextLine());
+            String line = sc.nextLine();
+            if(!line.isBlank()){
+                text.add(line);
+            }
+            
         }
         sc.close();
         return text;

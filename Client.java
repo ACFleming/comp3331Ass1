@@ -34,13 +34,27 @@ public class Client  {
                 System.out.print(TerminalText.USNM_PROMPT.getText());
                 msg_out.setCommand(Command.LOGIN_USERNAME);
                 msg_out.setUser(in_from_user.readLine());
+                if(msg_out.getUser().isBlank()){
+                    System.out.println(TerminalText.INV_CHAR.getText());
+                    continue;
+                }
+
                 send(out_to_server,msg_out);
                 read(in_from_server,msg_in);
                 if(msg_in.getCommand().equals(Command.NEED_PASSWORD.toString()) || msg_in.getCommand().equals(Command.NEW_USER.toString())){
-                    System.out.print(TerminalText.PSWD_PROMPT.getText());
+                    
+                    String pass;
+                    do {
+                        System.out.print(TerminalText.PSWD_PROMPT.getText());
+                        
+                        pass = in_from_user.readLine();
+                        if(!pass.isBlank() ||  !msg_in.getCommand().equals(Command.NEW_USER.toString())){
+                            break;
+                        }
+                        System.out.println(TerminalText.INV_CHAR.getText());
+                    } while (true);
                     
                     msg_out.setCommand(Command.LOGIN_PASSWORD);
-                    String pass = in_from_user.readLine();
                     msg_out.setArgs(pass, 0);
                     
                     send(out_to_server,msg_out);
@@ -51,9 +65,10 @@ public class Client  {
                     System.out.println(TerminalText.WELCOME.getText());
                     logged_in = true;
                     break;
-                }
-                if(msg_in.getCommand().equals(Command.LOGIN_FAIL.toString())){
+                }else if(msg_in.getCommand().equals(Command.LOGIN_FAIL.toString())){
                     System.out.println(TerminalText.PSWD_FAIL);
+                }else if (msg_in.getCommand().equals(Command.ERROR.toString())){
+                    System.out.println(msg_in.getArgs(0));
                 }
             }
             while(logged_in){
