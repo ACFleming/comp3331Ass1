@@ -6,7 +6,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Pattern;
+
 
 import msgs.*;
 
@@ -19,6 +19,8 @@ public class Server extends Thread {
     private static Boolean shutdown = false;
     private static Hashtable<String,String> user_pass;
     private static List<Server> server_list;
+    private static List<String> threads;
+    private static List<String> users;
 
     public static String cred_path_name = "./credentials.txt";
 
@@ -45,6 +47,8 @@ public class Server extends Thread {
         }
         user_pass = new Hashtable<String,String>();
         server_list = new ArrayList<Server>();
+        users = new ArrayList<String>();
+        threads = new ArrayList<String>();
         ServerSocket sock = new ServerSocket(Integer.parseInt(args[0]));
         while(!shutdown){
             System.out.println(TerminalText.SRVR_WAIT.getText());
@@ -78,24 +82,23 @@ public class Server extends Thread {
             
             boolean logged_in = false;
             while(!logged_in){
-                // read(in_from_client,msg_in);
                 read(in_from_client,msg_in);
-                // System.out.println("MSGIN:" +msg_in);
-                if(user_pass.containsKey(msg_in.getUser())){
+                if(users.contains(msg_in.getUser())){
+                    msg_out.setCommand(Command.ERROR);
+                    msg_out.setArgs(TerminalText.USER_LOGGED.getText(),0);
+                    send(out_to_client,msg_out);
+                }else if(user_pass.containsKey(msg_in.getUser())){
                     System.out.println("Need Password");
                     System.out.println(msg_in.getUser());
                     msg_out.setCommand(Command.NEED_PASSWORD);
                     send(out_to_client,msg_out);                    
                     read(in_from_client,msg_in);
-                    // read(in_from_client,msg_in);
-                    // System.out.println("Username is: " + msg_in.getUser());
                     if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
                         System.out.println("Correct Password");
                         logged_in = true;
+                        users.add(msg_in.getUser());
                         msg_out.setCommand(Command.LOGIN_COMPLETE);
                         send(out_to_client,msg_out);
-
-
                     }else{
                         System.out.println("Wrong Password");
                         msg_out.setCommand(Command.LOGIN_FAIL);
@@ -110,6 +113,7 @@ public class Server extends Thread {
                     user_pass.put(msg_in.getUser(), msg_in.getArgs(0));
                     writeOutString(cred_path_name, credentials);
                     logged_in = true;
+                    users.add(msg_in.getUser());
                     msg_out.setCommand(Command.LOGIN_COMPLETE);
                     send(out_to_client,msg_out);
 
@@ -121,23 +125,49 @@ public class Server extends Thread {
             while(logged_in){
                 read(in_from_client,msg_in);
                 System.out.println("GOT MESSAGE");
+
+
+                //BIG IF SWITCH STATEMENT
+                //CRT threadname
                 if(msg_in.getCommand().equals(Command.CRT.toString())){
+                    
                     pathname = "./" + msg_in.getArgs(0) + ".txt";
-                    File new_file = new File(pathname);
-                    if(new_file.createNewFile()){
-                        System.out.println("New file at: " + pathname);
+                    File new_thread = new File(pathname);
+                    if(new_thread.createNewFile()){
+                        System.out.println("New thread at: " + pathname);
                         List<String> text = new ArrayList<String>();
-                        text.add("NEWFILE");
+                        text.add(msg_in.getUser());
                         writeOutString(pathname, text);
                         msg_out.setCommand(Command.SUCCESS);
+                        threads.add(msg_in.getArgs(0));
                         send(out_to_client,msg_out);
                     }else{
-                        System.out.println("Existing file at: " + pathname);
+                        System.out.println("Existing thread at: " + pathname);
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.FILE_EXIST.getText(pathname), 0);
                         send(out_to_client,msg_out);
 
                     }
+                //MSG threadname message
+                }else if(msg_in.getCommand().equals(Command.MSG.toString())){
+                    if(threads.contains(msg_in.getArgs(0))){
+                        pathname = "./" + msg_in.getArgs(0) + ".txt";
+                        List<String> file_contents = readInText(pathname);
+                        number_lines(file_contents);
+                        file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
+                        writeOutString(pathname, file_contents);
+                        msg_out.setCommand(Command.SUCCESS);
+                        send(out_to_client,msg_out);
+                    }else{
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                        send(out_to_client,msg_out);
+                    }
+                }else if(msg_in.getCommand().equals(Command.LST.toString())){
+                    msg_out.setCommand(Command.LST);
+                    msg_out.setArgs(String.valueOf(threads.size()),0);
+                    msg_out.setArgs(String.join(",",threads),1);
+                    send(out_to_client,msg_out);
                 }
             }
 
@@ -163,6 +193,25 @@ public class Server extends Thread {
 
     
 // from https://techblogstation.com/java/read-text-file-in-java/
+
+    public static void number_lines(List<String> message_lines){
+        int msg_counter = 1;
+        Iterator<String> it = message_lines.iterator();
+        
+        for(int i = 0; i < message_lines.size(); i++) {
+            String line = message_lines.get(i);
+            //i.e its contains a : (not file upload) and is not a 1 word line (not a username)
+            if(line.contains(":") && line.split(" ").length > 1){
+                line = Integer.toString(msg_counter) + " " + line;
+                msg_counter++;
+                message_lines.set(i, line);
+
+            }
+        }
+    }
+
+
+
 
     private static List<String> readInText(String pathname) throws FileNotFoundException{
         File file = new File(pathname);

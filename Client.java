@@ -1,4 +1,9 @@
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
 
 import msgs.*;
 
@@ -59,33 +64,86 @@ public class Client  {
                     
                     send(out_to_server,msg_out);
                     read(in_from_server,msg_in);
+                    if(msg_in.getCommand().equals(Command.LOGIN_COMPLETE.toString())){
+                        System.out.println(TerminalText.WELCOME.getText());
+                        logged_in = true;
+                        break;
+                    }else if(msg_in.getCommand().equals(Command.LOGIN_FAIL.toString())){
+                        System.out.println(TerminalText.PSWD_FAIL);
+                    }
 
-                }
-                if(msg_in.getCommand().equals(Command.LOGIN_COMPLETE.toString())){
-                    System.out.println(TerminalText.WELCOME.getText());
-                    logged_in = true;
-                    break;
-                }else if(msg_in.getCommand().equals(Command.LOGIN_FAIL.toString())){
-                    System.out.println(TerminalText.PSWD_FAIL);
                 }else if (msg_in.getCommand().equals(Command.ERROR.toString())){
                     System.out.println(msg_in.getArgs(0));
                 }
             }
+            String message = "";
+            Boolean waiting = false;
             while(logged_in){
                 System.out.println(TerminalText.CMD_PROMPT.getText());
-                String[] cmd_args = in_from_user.readLine().split(" ");
-                System.out.print(cmd_args[0]);
-                if(cmd_args[0].equals(Command.CRT.toString())){
-                    msg_out.setCommand(Command.CRT);
-                    msg_out.setArgs(cmd_args[1], 0);
+                List<String> cmd_input =  Arrays.asList(in_from_user.readLine().split(" "));
+
+                //Commands
+
+                //CRT threadname
+                String command = cmd_input.get(0);
+                if(command.equals(Command.CRT.toString())){
+                    if(cmd_input.size() == 2){
+                        msg_out.setCommand(Command.CRT);
+                        msg_out.setArgs(cmd_input.get(1), 0);
+                        
+                        send(out_to_server,msg_out);
+                        waiting = true;
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText());
+                    }
+                
+                //MSG threadname message
+                }else if(command.equals(Command.MSG.toString())){
+                    if(cmd_input.size() >= 2){
+                        if(cmd_input.get(1).equals("credentials")){
+                            System.out.println(TerminalText.BAD_THREADNAME.getText());
+                        }else{
+                            msg_out.setCommand(Command.MSG);
+                            msg_out.setArgs(cmd_input.get(1),0);
+                            msg_out.setArgs(String.join(" ", cmd_input.subList(2, cmd_input.size())),1);
+                            send(out_to_server,msg_out);
+                            waiting = true;
+                        }
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
+                }else if(command.equals(Command.LST.toString())){
+                    msg_out.setCommand(Command.LST);
                     send(out_to_server,msg_out);
+                    waiting = true;
+                               
                 }else{
                     System.out.println(TerminalText.INV_CMD.getText());
                 }
-                read(in_from_server,msg_in);
-                if(msg_in.getCommand().equals(Command.ERROR.toString())){
-                    System.out.println(msg_in.getArgs(0));
+
+                
+                //Responses
+                if(waiting){
+                    read(in_from_server,msg_in);
+                    if(msg_in.getCommand().equals(Command.ERROR.toString())){
+                        System.out.println(msg_in.getArgs(0));
+                    }else if (msg_in.getCommand().equals(Command.LST.toString())){
+                        int num_threads = Integer.parseInt(msg_in.getArgs(0));
+                        if(num_threads == 0){
+                            System.out.println(TerminalText.NO_THREADS.getText());
+                        }else{
+                            System.out.println(TerminalText.LIST_THREAD.getText());
+                            String[] threads = msg_in.getArgs(1).split(",");
+                            for(int i = 0; i < num_threads;i++){
+                                System.out.println(threads[i]);
+    
+                            }
+                        }
+
+                    }
                 }
+                waiting = false;
+
             }
             
             alive = false;

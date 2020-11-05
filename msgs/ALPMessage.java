@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class ALPMessage implements Serializable{
 
 
-
+    private static String split_key = "::";
 
     private static final long serialVersionUID = 480180711443453936L;
     private byte[] payload;
@@ -113,11 +113,11 @@ public class ALPMessage implements Serializable{
 
     @Override
     public String toString() {
-        return this.user +  " " + this.arg0 + " " +  this.arg1 +" " + this.arg2 +" " + this.command.toString();
+        return this.user +  split_key + this.arg0 + split_key +  this.arg1 +split_key + this.arg2 +split_key + this.command.toString();
     }
 
     public void fromString(String input){
-        String[] list = input.split(" ");
+        String[] list = input.split(split_key);
         this.setUser(list[0]);
         this.setArgs(list[1], 0);
         this.setArgs(list[2],1);
