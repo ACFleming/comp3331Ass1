@@ -7,8 +7,8 @@ public class ThreadMessage extends ThreadItem {
     public ThreadMessage() {
     }
 
-    public ThreadMessage(String message, int message_number){
-        super(message);
+    public ThreadMessage(String message, String user, int message_number){
+        super(message,user);
         setMessage_number(message_number);
     }
 

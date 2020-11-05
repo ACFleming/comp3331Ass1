@@ -2,13 +2,13 @@ package msgs;
 
 public enum TerminalText {
     
-    BAD_EDT("Message cannot be edited"),
+    BAD_EDT("Invalid/Illegal message to edit"),
     BAD_FILE("%s does not exist in thread %s"),
     BAD_SYNTAX("Incorrect syntax for %s"),
     BAD_THREADNAME("Invalid/illegal thread specified"),
     CANT_RMV("Thread %s cannot be removed"),
     CLIENT_CNCT("Client connected"),
-    CMD_PROMPT("Enter one of the following commands:(CRT, LST, MSG) :"),
+    CMD_PROMPT("Enter one of the following commands:(CRT, EDT, LST, MSG) :"),
     FILE_DWN("%s downloaded from thread %s"),
     FILE_EXIST("File %s already exists"),
     FILE_UPD("%s uploaded file %s to thread %s"),

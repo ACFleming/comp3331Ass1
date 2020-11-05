@@ -21,12 +21,12 @@ public class ThreadFile {
         this.pathname = "./" + threadname + ".txt";
         this.contents = new ArrayList<ThreadItem>();
         this.msg_number = 1;
-        addItem(user);
+        addItem(user,user);
     }
 
     public void addMessage(String message, String user){
         String line = String.valueOf(msg_number) + " " + user + ": " + message;
-        contents.add(new ThreadMessage(line,msg_number));
+        contents.add(new ThreadMessage(line,user,msg_number));
         msg_number++;
     }
 
@@ -35,8 +35,19 @@ public class ThreadFile {
 
     // }
 
-    public void addItem(String message){
-        contents.add(new ThreadItem(message));
+    public int editMessage(String user, String message, int number){
+        ThreadItem edit = getMessage(number);
+        if(edit == null || !edit.getUser().equals(user)){
+            return -1;
+        }
+        String[] separated = edit.getMessage().split(":");
+        edit.setMessage(separated[0] + ": " +  message);
+        return 0;
+
+    }
+
+    public void addItem(String message, String user){
+        contents.add(new ThreadItem(message,user));
     }
 
     public String getUser() {

@@ -170,6 +170,8 @@ public class Server extends Thread {
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
                         send(out_to_client,msg_out);
                     }
+                
+                // LST
                 }else if(msg_in.getCommand().equals(Command.LST.toString())){
                     msg_out.setCommand(Command.LST);
                     msg_out.setArgs(String.valueOf(threads.size()),0);
@@ -179,6 +181,32 @@ public class Server extends Thread {
                     }
                     msg_out.setArgs(String.join(",",threadnames),1);
                     send(out_to_client,msg_out);
+                
+                // EDT threadname messagenumber message
+                }else if(msg_in.getCommand().equals(Command.EDT.toString())){
+                    if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
+                        
+                        ThreadFile selected_thread = threads.get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
+                        
+                        // String pathname = "./" + msg_in.getArgs(0) + ".txt";
+                        // List<String> file_contents = readInText(pathname);
+                        System.out.println(msg_in.getArgs(2));
+                        if(selected_thread.editMessage(msg_in.getUser(), msg_in.getArgs(2), Integer.parseInt(msg_in.getArgs(1)))==-1){
+                            msg_out.setCommand(Command.ERROR);
+                            msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
+                            send(out_to_client,msg_out);
+                        }else{
+                        // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
+                        
+                            writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
+                            msg_out.setCommand(Command.SUCCESS);
+                            send(out_to_client,msg_out);
+                        }
+                    }else{
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                        send(out_to_client,msg_out);
+                    }
                 }
             }
 

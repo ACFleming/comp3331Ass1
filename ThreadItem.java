@@ -2,18 +2,24 @@ import java.util.Objects;
 
 public class ThreadItem {
 
+    private String user;
     private String message;
 
 
     public ThreadItem() {
     }
 
-    public ThreadItem(String message) {
+    public ThreadItem(String message,String user) {
         this.message = message;
+        this.user = user;
     }
 
     public String getMessage() {
         return this.message;
+    }
+
+    public String getUser(){
+        return this.user;
     }
 
     public void setMessage(String message) {

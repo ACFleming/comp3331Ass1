@@ -112,11 +112,22 @@ public class Client  {
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
                     }
+                // LST
                 }else if(command.equals(Command.LST.toString())){
                     msg_out.setCommand(Command.LST);
                     send(out_to_server,msg_out);
                     waiting = true;
-                               
+
+                // EDT threadtitle messagenumber message
+                }else if(command.equals(Command.EDT.toString())){
+                    msg_out.setCommand(Command.EDT);
+                    msg_out.setArgs(cmd_input.get(1),0);
+                    msg_out.setArgs(cmd_input.get(2),1);
+                    msg_out.setArgs(String.join(" ", cmd_input.subList(3, cmd_input.size())),2);
+                    send(out_to_server, msg_out);
+                    waiting = true;
+
+                
                 }else{
                     System.out.println(TerminalText.INV_CMD.getText());
                 }
