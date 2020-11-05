@@ -14,12 +14,13 @@ import msgs.*;
 
 
 
+
 public class Server extends Thread {
 
     private static Boolean shutdown = false;
     private static Hashtable<String,String> user_pass;
     private static List<Server> server_list;
-    private static List<String> threads;
+    private static List<ThreadFile> threads;
     private static List<String> users;
 
     public static String cred_path_name = "./credentials.txt";
@@ -48,7 +49,8 @@ public class Server extends Thread {
         user_pass = new Hashtable<String,String>();
         server_list = new ArrayList<Server>();
         users = new ArrayList<String>();
-        threads = new ArrayList<String>();
+        threads = new ArrayList<ThreadFile>();
+
         ServerSocket sock = new ServerSocket(Integer.parseInt(args[0]));
         while(!shutdown){
             System.out.println(TerminalText.SRVR_WAIT.getText());
@@ -120,7 +122,7 @@ public class Server extends Thread {
 
                 }
             }
-            String pathname;
+
             System.out.println("LOGGED IN");
             while(logged_in){
                 read(in_from_client,msg_in);
@@ -131,7 +133,9 @@ public class Server extends Thread {
                 //CRT threadname
                 if(msg_in.getCommand().equals(Command.CRT.toString())){
                     
-                    pathname = "./" + msg_in.getArgs(0) + ".txt";
+                    String threadname = msg_in.getArgs(0);
+                    String pathname = "./" + threadname + ".txt";
+                    
                     File new_thread = new File(pathname);
                     if(new_thread.createNewFile()){
                         System.out.println("New thread at: " + pathname);
@@ -139,7 +143,7 @@ public class Server extends Thread {
                         text.add(msg_in.getUser());
                         writeOutString(pathname, text);
                         msg_out.setCommand(Command.SUCCESS);
-                        threads.add(msg_in.getArgs(0));
+                        threads.add(new ThreadFile(msg_in.getUser(), threadname));
                         send(out_to_client,msg_out);
                     }else{
                         System.out.println("Existing thread at: " + pathname);
@@ -150,12 +154,15 @@ public class Server extends Thread {
                     }
                 //MSG threadname message
                 }else if(msg_in.getCommand().equals(Command.MSG.toString())){
-                    if(threads.contains(msg_in.getArgs(0))){
-                        pathname = "./" + msg_in.getArgs(0) + ".txt";
-                        List<String> file_contents = readInText(pathname);
-                        number_lines(file_contents);
-                        file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
-                        writeOutString(pathname, file_contents);
+                    if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
+                        
+                        ThreadFile selected_thread = threads.get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
+                        // String pathname = "./" + msg_in.getArgs(0) + ".txt";
+                        // List<String> file_contents = readInText(pathname);
+                        selected_thread.addMessage(msg_in.getArgs(1),msg_in.getUser());
+                        // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
+                        
+                        writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                         msg_out.setCommand(Command.SUCCESS);
                         send(out_to_client,msg_out);
                     }else{
@@ -166,7 +173,11 @@ public class Server extends Thread {
                 }else if(msg_in.getCommand().equals(Command.LST.toString())){
                     msg_out.setCommand(Command.LST);
                     msg_out.setArgs(String.valueOf(threads.size()),0);
-                    msg_out.setArgs(String.join(",",threads),1);
+                    List<String> threadnames = new ArrayList<String>();
+                    for(ThreadFile th : Server.threads){
+                        threadnames.add(th.getThreadname());
+                    }
+                    msg_out.setArgs(String.join(",",threadnames),1);
                     send(out_to_client,msg_out);
                 }
             }
