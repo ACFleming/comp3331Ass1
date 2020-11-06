@@ -128,6 +128,16 @@ public class Client  {
                     waiting = true;
 
                 
+                // DLT threadtitle messagenumber
+                }else if(command.equals(Command.DLT.toString())){
+                    msg_out.setCommand(Command.DLT);
+                    msg_out.setArgs(cmd_input.get(1),0);
+                    msg_out.setArgs(cmd_input.get(2),1);
+                    send(out_to_server, msg_out);
+                    waiting = true;
+
+                
+
                 }else{
                     System.out.println(TerminalText.INV_CMD.getText());
                 }

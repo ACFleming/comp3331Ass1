@@ -1,6 +1,9 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+
+import javax.swing.plaf.basic.BasicComboBoxUI.ItemHandler;
 
 
 public class ThreadFile {
@@ -34,6 +37,34 @@ public class ThreadFile {
     //     contents.set(new ThreadMessage(message,);
 
     // }
+
+    public int deleteMessage(String user, int number){
+        ThreadMessage msg = getMessage(number);
+        if(msg == null || !msg.getUser().equals(user)){
+            return -1;
+        }
+        int index = contents.indexOf(msg);
+        contents.remove(index);
+        this.msg_number--;
+        for(int i = index; i < contents.size(); i++){
+            ThreadItem item = contents.get(i);
+            if(item instanceof ThreadMessage){
+                msg = (ThreadMessage)item;
+                msg.setMessage_number(msg.getMessage_number()-1);
+                String textline = msg.getMessage();
+                System.out.println(textline + "NEW NUMBER: " + msg.getMessage_number());
+                
+                textline = textline.replaceFirst("\\d+", String.valueOf(msg.getMessage_number()));
+                
+                msg.setMessage(textline);
+
+
+
+            }
+            
+        }
+        return 0;
+    }
 
     public int editMessage(String user, String message, int number){
         ThreadItem edit = getMessage(number);
@@ -94,7 +125,7 @@ public class ThreadFile {
 
 
 
-    public ThreadItem getMessage(int number){
+    public ThreadMessage getMessage(int number){
         for(ThreadItem item : this.contents){
             if(item instanceof ThreadMessage ){
                 ThreadMessage msg = (ThreadMessage)item;
