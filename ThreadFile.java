@@ -8,6 +8,8 @@ import javax.swing.plaf.basic.BasicComboBoxUI.ItemHandler;
 
 public class ThreadFile {
 
+    public static String thread_split_key = "phlydgfl2345ifgu7nndgsdiodh7to8vgoy9ots8f7";
+
     private String user;
     private String threadname;
     private String pathname;
@@ -38,6 +40,15 @@ public class ThreadFile {
 
     // }
 
+    public List<String> readThread(){
+        List<String> read = new ArrayList<String>();
+        for(int i = 1; i < contents.size(); i++){
+            read.add(contents.get(i).getMessage());
+
+        }
+        return read;
+    }
+
     public int deleteMessage(String user, int number){
         ThreadMessage msg = getMessage(number);
         if(msg == null || !msg.getUser().equals(user)){
@@ -52,7 +63,7 @@ public class ThreadFile {
                 msg = (ThreadMessage)item;
                 msg.setMessage_number(msg.getMessage_number()-1);
                 String textline = msg.getMessage();
-                System.out.println(textline + "NEW NUMBER: " + msg.getMessage_number());
+
                 
                 textline = textline.replaceFirst("\\d+", String.valueOf(msg.getMessage_number()));
                 

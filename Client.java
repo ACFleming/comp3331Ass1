@@ -96,8 +96,21 @@ public class Client  {
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText());
                     }
+        
+                // RMV threadname
+                }else if(command.equals(Command.RMV.toString())){
+                    if(cmd_input.size() == 2){
+                        msg_out.setCommand(Command.RMV);
+                        msg_out.setArgs(cmd_input.get(1), 0);
+                        
+                        send(out_to_server,msg_out);
+                        waiting = true;
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText());
+                    }
                 
-                //MSG threadname message
+                
+                // MSG threadname message
                 }else if(command.equals(Command.MSG.toString())){
                     if(cmd_input.size() >= 2){
                         if(cmd_input.get(1).equals("credentials")){
@@ -114,27 +127,61 @@ public class Client  {
                     }
                 // LST
                 }else if(command.equals(Command.LST.toString())){
-                    msg_out.setCommand(Command.LST);
-                    send(out_to_server,msg_out);
-                    waiting = true;
+
+                    if(cmd_input.size() == 1){
+                        msg_out.setCommand(Command.LST);
+                        send(out_to_server,msg_out);
+                        waiting = true;
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
+
 
                 // EDT threadtitle messagenumber message
                 }else if(command.equals(Command.EDT.toString())){
-                    msg_out.setCommand(Command.EDT);
-                    msg_out.setArgs(cmd_input.get(1),0);
-                    msg_out.setArgs(cmd_input.get(2),1);
-                    msg_out.setArgs(String.join(" ", cmd_input.subList(3, cmd_input.size())),2);
-                    send(out_to_server, msg_out);
-                    waiting = true;
-
+                    if(cmd_input.size() >= 3){
+                        if(cmd_input.get(1).equals("credentials")){
+                            System.out.println(TerminalText.BAD_THREADNAME.getText());
+                        }else{
+                            msg_out.setCommand(Command.EDT);
+                            msg_out.setArgs(cmd_input.get(1),0);
+                            msg_out.setArgs(cmd_input.get(2),1);
+                            msg_out.setArgs(String.join(" ", cmd_input.subList(3, cmd_input.size())),2);
+                            send(out_to_server, msg_out);
+                            waiting = true;
+                        }
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
                 
                 // DLT threadtitle messagenumber
                 }else if(command.equals(Command.DLT.toString())){
-                    msg_out.setCommand(Command.DLT);
-                    msg_out.setArgs(cmd_input.get(1),0);
-                    msg_out.setArgs(cmd_input.get(2),1);
-                    send(out_to_server, msg_out);
-                    waiting = true;
+                    if(cmd_input.size() == 3){
+                        if(cmd_input.get(1).equals("credentials")){
+                            System.out.println(TerminalText.BAD_THREADNAME.getText());
+                        }else{
+                            msg_out.setCommand(Command.DLT);
+                            msg_out.setArgs(cmd_input.get(1),0);
+                            msg_out.setArgs(cmd_input.get(2),1);
+                            send(out_to_server, msg_out);
+                            waiting = true;
+                        }
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
+                    
+
+
+                // RDT threadtitle
+                }else if(command.equals(Command.RDT.toString())){
+                    if(cmd_input.size() == 2){
+                        msg_out.setCommand(Command.RDT);
+                        msg_out.setArgs(cmd_input.get(1),0);
+                        send(out_to_server, msg_out);
+                        waiting = true;
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
 
                 
 
@@ -154,13 +201,25 @@ public class Client  {
                             System.out.println(TerminalText.NO_THREADS.getText());
                         }else{
                             System.out.println(TerminalText.LIST_THREAD.getText());
-                            String[] threads = msg_in.getArgs(1).split(",");
+                            String[] threads = msg_in.getArgs(1).split(ThreadFile.thread_split_key);
                             for(int i = 0; i < num_threads;i++){
                                 System.out.println(threads[i]);
     
                             }
                         }
 
+                    }else if(msg_in.getCommand().equals(Command.RDT.toString())){
+                        int num_lines = Integer.parseInt(msg_in.getArgs(0));
+                        if(num_lines == 0){
+                            System.out.println(TerminalText.EMPTY_THREAD.getText(cmd_input.get(1)));
+                        }else{
+
+                            String[] lines = msg_in.getArgs(1).split(ThreadFile.thread_split_key);
+                            for(int i = 0; i < num_lines;i++){
+                                System.out.println(lines[i]);
+    
+                            }
+                        }
                     }
                 }
                 waiting = false;

@@ -152,6 +152,22 @@ public class Server extends Thread {
                         send(out_to_client,msg_out);
 
                     }
+                }else if(msg_in.getCommand().equals(Command.RMV.toString())){
+                    ThreadFile remove = new ThreadFile(null, msg_in.getArgs(0));
+                    
+                    if(threads.indexOf(remove) == -1){
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                        send(out_to_client,msg_out);
+                    }else{
+                        File remove_thread = new File(threads.get(threads.indexOf(remove)).getPathname());
+                        remove_thread.delete();
+                        threads.remove(remove);
+                        msg_out.setCommand(Command.SUCCESS);
+                        send(out_to_client,msg_out);
+                    }
+
+                
                 //MSG threadname message
                 }else if(msg_in.getCommand().equals(Command.MSG.toString())){
                     if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
@@ -179,7 +195,7 @@ public class Server extends Thread {
                     for(ThreadFile th : Server.threads){
                         threadnames.add(th.getThreadname());
                     }
-                    msg_out.setArgs(String.join(",",threadnames),1);
+                    msg_out.setArgs(String.join(ThreadFile.thread_split_key,threadnames),1);
                     send(out_to_client,msg_out);
                 
                 // EDT threadname messagenumber message
@@ -214,10 +230,10 @@ public class Server extends Thread {
                         
                         // String pathname = "./" + msg_in.getArgs(0) + ".txt";
                         // List<String> file_contents = readInText(pathname);
-                        System.out.println(msg_in.getArgs(2));
+
                         if(selected_thread.deleteMessage(msg_in.getUser(),Integer.parseInt(msg_in.getArgs(1)))==-1){
                             msg_out.setCommand(Command.ERROR);
-                            msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
+                            msg_out.setArgs(TerminalText.BAD_DLT.getText(),0);
                             send(out_to_client,msg_out);
                         }else{
                         // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
@@ -226,6 +242,37 @@ public class Server extends Thread {
                             msg_out.setCommand(Command.SUCCESS);
                             send(out_to_client,msg_out);
                         }
+                    }else{
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                        send(out_to_client,msg_out);
+                    }
+                }else if(msg_in.getCommand().equals(Command.RDT.toString())){
+                    if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
+                        
+                        ThreadFile selected_thread = threads.get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
+                        
+                        // // String pathname = "./" + msg_in.getArgs(0) + ".txt";
+                        // // List<String> file_contents = readInText(pathname);
+
+                        List<String> read = selected_thread.readThread();
+                        msg_out.setCommand(Command.RDT);
+                        msg_out.setArgs(String.valueOf(read.size()),0);
+                        msg_out.setArgs(String.join(ThreadFile.thread_split_key,read),1);
+                        send(out_to_client,msg_out);
+
+
+                        // if(selected_thread.deleteMessage(msg_in.getUser(),Integer.parseInt(msg_in.getArgs(1)))==-1){
+                        //     msg_out.setCommand(Command.ERROR);
+                        //     msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
+                        //     send(out_to_client,msg_out);
+                        // }else{
+                        // // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
+                        
+                        //     writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
+                        //     msg_out.setCommand(Command.SUCCESS);
+                        //     send(out_to_client,msg_out);
+                        // }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
