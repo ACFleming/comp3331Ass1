@@ -1,6 +1,10 @@
 
 package msgs;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -30,7 +34,7 @@ public class ALPMessage implements Serializable{
 
     public ALPMessage() {
         this.setPayload(null);
-        this.setArgs("arg", 0);
+        this.setArgs("arg0", 0);
         this.setArgs("arg1", 1);;
         this.setArgs("arg2", 2);;
         this.setUser("Internal");
@@ -125,6 +129,35 @@ public class ALPMessage implements Serializable{
         this.setCommand(list[4]);
 
     }
+
+    public static void send(DataOutputStream out,ALPMessage msg) throws IOException {
+        System.out.println("MSGOUT:" +msg);
+        
+        out.writeBytes(msg.toString() + "\n");
+        out.flush();
+    }
+
+
+    public static void read(BufferedReader in, ALPMessage msg) throws ClassNotFoundException, IOException {
+        String temp = in.readLine();
+        msg.fromString(temp);
+        System.out.println("MSGIN:" +msg);
+        
+
+    }
+
+    public static void sendBytes(DataOutputStream out, ALPMessage msg) throws IOException {
+        out.write(msg.getPayload());
+    }
+
+    public static void readBytes(DataInputStream in, ALPMessage msg) throws IOException {
+        byte[] b = new byte[1024];
+        in.readFully(b);
+        msg.setPayload(b);
+
+
+    }
+
 
 }
 

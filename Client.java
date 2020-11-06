@@ -44,8 +44,8 @@ public class Client  {
                     continue;
                 }
 
-                send(out_to_server,msg_out);
-                read(in_from_server,msg_in);
+                ALPMessage.send(out_to_server,msg_out);
+                ALPMessage.read(in_from_server,msg_in);
                 if(msg_in.getCommand().equals(Command.NEED_PASSWORD.toString()) || msg_in.getCommand().equals(Command.NEW_USER.toString())){
                     
                     String pass;
@@ -62,8 +62,8 @@ public class Client  {
                     msg_out.setCommand(Command.LOGIN_PASSWORD);
                     msg_out.setArgs(pass, 0);
                     
-                    send(out_to_server,msg_out);
-                    read(in_from_server,msg_in);
+                    ALPMessage.send(out_to_server,msg_out);
+                    ALPMessage.read(in_from_server,msg_in);
                     if(msg_in.getCommand().equals(Command.LOGIN_COMPLETE.toString())){
                         System.out.println(TerminalText.WELCOME.getText());
                         logged_in = true;
@@ -91,7 +91,7 @@ public class Client  {
                         msg_out.setCommand(Command.CRT);
                         msg_out.setArgs(cmd_input.get(1), 0);
                         
-                        send(out_to_server,msg_out);
+                        ALPMessage.send(out_to_server,msg_out);
                         waiting = true;
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText());
@@ -103,7 +103,7 @@ public class Client  {
                         msg_out.setCommand(Command.RMV);
                         msg_out.setArgs(cmd_input.get(1), 0);
                         
-                        send(out_to_server,msg_out);
+                        ALPMessage.send(out_to_server,msg_out);
                         waiting = true;
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText());
@@ -119,7 +119,7 @@ public class Client  {
                             msg_out.setCommand(Command.MSG);
                             msg_out.setArgs(cmd_input.get(1),0);
                             msg_out.setArgs(String.join(" ", cmd_input.subList(2, cmd_input.size())),1);
-                            send(out_to_server,msg_out);
+                            ALPMessage.send(out_to_server,msg_out);
                             waiting = true;
                         }
                     }else{
@@ -130,7 +130,7 @@ public class Client  {
 
                     if(cmd_input.size() == 1){
                         msg_out.setCommand(Command.LST);
-                        send(out_to_server,msg_out);
+                        ALPMessage.send(out_to_server,msg_out);
                         waiting = true;
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
@@ -147,7 +147,7 @@ public class Client  {
                             msg_out.setArgs(cmd_input.get(1),0);
                             msg_out.setArgs(cmd_input.get(2),1);
                             msg_out.setArgs(String.join(" ", cmd_input.subList(3, cmd_input.size())),2);
-                            send(out_to_server, msg_out);
+                            ALPMessage.send(out_to_server, msg_out);
                             waiting = true;
                         }
                     }else{
@@ -163,7 +163,7 @@ public class Client  {
                             msg_out.setCommand(Command.DLT);
                             msg_out.setArgs(cmd_input.get(1),0);
                             msg_out.setArgs(cmd_input.get(2),1);
-                            send(out_to_server, msg_out);
+                            ALPMessage.send(out_to_server, msg_out);
                             waiting = true;
                         }
                     }else{
@@ -177,7 +177,7 @@ public class Client  {
                     if(cmd_input.size() == 2){
                         msg_out.setCommand(Command.RDT);
                         msg_out.setArgs(cmd_input.get(1),0);
-                        send(out_to_server, msg_out);
+                        ALPMessage.send(out_to_server, msg_out);
                         waiting = true;
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
@@ -192,7 +192,7 @@ public class Client  {
                 
                 //Responses
                 if(waiting){
-                    read(in_from_server,msg_in);
+                    ALPMessage.read(in_from_server,msg_in);
                     if(msg_in.getCommand().equals(Command.ERROR.toString())){
                         System.out.println(msg_in.getArgs(0));
                     }else if (msg_in.getCommand().equals(Command.LST.toString())){
@@ -237,21 +237,7 @@ public class Client  {
 
 
     
-    public static void send(DataOutputStream out,ALPMessage msg) throws IOException {
-        System.out.println("MSGOUT:" +msg);
-        
-        out.writeBytes(msg.toString() + "\n");
-        out.flush();
-    }
 
-
-    public static void read(BufferedReader in, ALPMessage msg) throws ClassNotFoundException, IOException {
-        String temp = in.readLine();
-        msg.fromString(temp);
-        System.out.println("MSGIN:" +msg);
-        
-
-    }
 
 
 

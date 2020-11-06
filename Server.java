@@ -84,40 +84,40 @@ public class Server extends Thread {
             
             boolean logged_in = false;
             while(!logged_in){
-                read(in_from_client,msg_in);
+                ALPMessage.read(in_from_client,msg_in);
                 if(users.contains(msg_in.getUser())){
                     msg_out.setCommand(Command.ERROR);
                     msg_out.setArgs(TerminalText.USER_LOGGED.getText(),0);
-                    send(out_to_client,msg_out);
+                    ALPMessage.send(out_to_client,msg_out);
                 }else if(user_pass.containsKey(msg_in.getUser())){
                     System.out.println("Need Password");
                     System.out.println(msg_in.getUser());
                     msg_out.setCommand(Command.NEED_PASSWORD);
-                    send(out_to_client,msg_out);                    
-                    read(in_from_client,msg_in);
+                    ALPMessage.send(out_to_client,msg_out);                    
+                    ALPMessage.read(in_from_client,msg_in);
                     if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
                         System.out.println("Correct Password");
                         logged_in = true;
                         users.add(msg_in.getUser());
                         msg_out.setCommand(Command.LOGIN_COMPLETE);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }else{
                         System.out.println("Wrong Password");
                         msg_out.setCommand(Command.LOGIN_FAIL);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }
                 }else{
                     System.out.println("New User");
                     msg_out.setCommand(Command.NEW_USER);
-                    send(out_to_client,msg_out);
-                    read(in_from_client,msg_in);
+                    ALPMessage.send(out_to_client,msg_out);
+                    ALPMessage.read(in_from_client,msg_in);
                     credentials.add(msg_in.getUser()+ " " + msg_in.getArgs(0));
                     user_pass.put(msg_in.getUser(), msg_in.getArgs(0));
                     writeOutString(cred_path_name, credentials);
                     logged_in = true;
                     users.add(msg_in.getUser());
                     msg_out.setCommand(Command.LOGIN_COMPLETE);
-                    send(out_to_client,msg_out);
+                    ALPMessage.send(out_to_client,msg_out);
 
 
                 }
@@ -125,7 +125,7 @@ public class Server extends Thread {
 
             System.out.println("LOGGED IN");
             while(logged_in){
-                read(in_from_client,msg_in);
+                ALPMessage.read(in_from_client,msg_in);
                 System.out.println("GOT MESSAGE");
 
 
@@ -144,12 +144,12 @@ public class Server extends Thread {
                         writeOutString(pathname, text);
                         msg_out.setCommand(Command.SUCCESS);
                         threads.add(new ThreadFile(msg_in.getUser(), threadname));
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }else{
                         System.out.println("Existing thread at: " + pathname);
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.FILE_EXIST.getText(pathname), 0);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
 
                     }
                 }else if(msg_in.getCommand().equals(Command.RMV.toString())){
@@ -158,13 +158,13 @@ public class Server extends Thread {
                     if(threads.indexOf(remove) == -1){
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }else{
                         File remove_thread = new File(threads.get(threads.indexOf(remove)).getPathname());
                         remove_thread.delete();
                         threads.remove(remove);
                         msg_out.setCommand(Command.SUCCESS);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }
 
                 
@@ -180,11 +180,11 @@ public class Server extends Thread {
                         
                         writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                         msg_out.setCommand(Command.SUCCESS);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }
                 
                 // LST
@@ -196,7 +196,7 @@ public class Server extends Thread {
                         threadnames.add(th.getThreadname());
                     }
                     msg_out.setArgs(String.join(ThreadFile.thread_split_key,threadnames),1);
-                    send(out_to_client,msg_out);
+                    ALPMessage.send(out_to_client,msg_out);
                 
                 // EDT threadname messagenumber message
                 }else if(msg_in.getCommand().equals(Command.EDT.toString())){
@@ -210,18 +210,18 @@ public class Server extends Thread {
                         if(selected_thread.editMessage(msg_in.getUser(), msg_in.getArgs(2), Integer.parseInt(msg_in.getArgs(1)))==-1){
                             msg_out.setCommand(Command.ERROR);
                             msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
-                            send(out_to_client,msg_out);
+                            ALPMessage.send(out_to_client,msg_out);
                         }else{
                         // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                             writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                             msg_out.setCommand(Command.SUCCESS);
-                            send(out_to_client,msg_out);
+                            ALPMessage.send(out_to_client,msg_out);
                         }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }
                 }else if(msg_in.getCommand().equals(Command.DLT.toString())){
                     if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
@@ -234,18 +234,18 @@ public class Server extends Thread {
                         if(selected_thread.deleteMessage(msg_in.getUser(),Integer.parseInt(msg_in.getArgs(1)))==-1){
                             msg_out.setCommand(Command.ERROR);
                             msg_out.setArgs(TerminalText.BAD_DLT.getText(),0);
-                            send(out_to_client,msg_out);
+                            ALPMessage.send(out_to_client,msg_out);
                         }else{
                         // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                             writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                             msg_out.setCommand(Command.SUCCESS);
-                            send(out_to_client,msg_out);
+                            ALPMessage.send(out_to_client,msg_out);
                         }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }
                 }else if(msg_in.getCommand().equals(Command.RDT.toString())){
                     if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
@@ -259,24 +259,24 @@ public class Server extends Thread {
                         msg_out.setCommand(Command.RDT);
                         msg_out.setArgs(String.valueOf(read.size()),0);
                         msg_out.setArgs(String.join(ThreadFile.thread_split_key,read),1);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
 
 
                         // if(selected_thread.deleteMessage(msg_in.getUser(),Integer.parseInt(msg_in.getArgs(1)))==-1){
                         //     msg_out.setCommand(Command.ERROR);
                         //     msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
-                        //     send(out_to_client,msg_out);
+                        //     ALPMessage.send(out_to_client,msg_out);
                         // }else{
                         // // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                         //     writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                         //     msg_out.setCommand(Command.SUCCESS);
-                        //     send(out_to_client,msg_out);
+                        //     ALPMessage.send(out_to_client,msg_out);
                         // }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        send(out_to_client,msg_out);
+                        ALPMessage.send(out_to_client,msg_out);
                     }
                 }
             }
@@ -352,19 +352,5 @@ public class Server extends Thread {
     }
 
 
-    public static void send(DataOutputStream out,ALPMessage msg) throws IOException {
-        System.out.println("MSGOUT:" +msg);
-        
-        out.writeBytes(msg.toString() + "\n");
-        out.flush();
-    }
 
-
-    public static void read(BufferedReader in, ALPMessage msg) throws ClassNotFoundException, IOException {
-        String temp = in.readLine();
-        msg.fromString(temp);
-        System.out.println("MSGIN:" +msg);
-        
-
-    }
 }
