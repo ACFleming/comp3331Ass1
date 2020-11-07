@@ -5,6 +5,9 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -134,6 +137,7 @@ public class ALPMessage implements Serializable{
         System.out.println("MSGOUT:" +msg);
         
         out.writeBytes(msg.toString() + "\n");
+
         out.flush();
     }
 
@@ -146,15 +150,46 @@ public class ALPMessage implements Serializable{
 
     }
 
+    // public static void read(BufferedReader in, ALPMessage msg) throws ClassNotFoundException, IOException {
+    //     String temp = in.readLine();
+    //     msg.fromString(temp);
+    //     System.out.println("MSGIN:" +msg);
+        
+
+    // }
+
+
     public static void sendBytes(DataOutputStream out, ALPMessage msg) throws IOException {
+        out.writeUTF(msg.toString());
         out.write(msg.getPayload());
+        out.flush();
     }
 
     public static void readBytes(DataInputStream in, ALPMessage msg) throws IOException {
+        String temp = in.readUTF();
+        msg.fromString(temp);
         byte[] b = new byte[1024];
         in.readFully(b);
+        
         msg.setPayload(b);
 
+
+    }
+
+    public static void sendObject(ObjectOutputStream out, ALPMessage msg) throws IOException {
+        out.writeObject(msg);
+        out.flush();
+    }
+
+    public static void readObject(ObjectInputStream in, ALPMessage msg) throws ClassNotFoundException, IOException {
+        Object o = in.readObject();
+        System.out.print(o);
+        ALPMessage temp = (ALPMessage)o;
+        msg.setUser(temp.getUser());
+        msg.setArgs(temp.getArgs());
+        msg.setCommand(temp.getCommand());
+        msg.setPayload(temp.getPayload());
+        
 
     }
 

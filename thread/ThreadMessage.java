@@ -1,3 +1,5 @@
+package thread;
+
 import java.util.Objects;
 
 public class ThreadMessage extends ThreadItem {

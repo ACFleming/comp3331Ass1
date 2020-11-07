@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
-
 import msgs.*;
+import thread.ThreadFile;
 
 
 
@@ -29,6 +29,8 @@ public class Server extends Thread {
     private Socket socket;
     private BufferedReader in_from_client;
     private DataOutputStream out_to_client;
+    private ObjectInputStream in_from_client_object;
+    private ObjectOutputStream out_to_client_object;
     private ALPMessage msg_out = new ALPMessage();
     private ALPMessage msg_in = new ALPMessage();
 
@@ -38,6 +40,15 @@ public class Server extends Thread {
         out_to_client = new DataOutputStream(socket.getOutputStream());
         out_to_client.flush();
         in_from_client = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+        out_to_client_object = new ObjectOutputStream(socket.getOutputStream());
+        out_to_client_object.flush();
+        System.out.println("HERE");
+        in_from_client_object = new ObjectInputStream(socket.getInputStream());
+        System.out.println("HERE");
+        if(out_to_client_object == null || in_from_client_object == null){
+            System.out.println("NULL");
+        }
         
     }
 
@@ -84,7 +95,7 @@ public class Server extends Thread {
             
             boolean logged_in = false;
             while(!logged_in){
-                ALPMessage.read(in_from_client,msg_in);
+                ALPMessage.readObject(in_from_client_object,msg_in);
                 if(users.contains(msg_in.getUser())){
                     msg_out.setCommand(Command.ERROR);
                     msg_out.setArgs(TerminalText.USER_LOGGED.getText(),0);
