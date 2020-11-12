@@ -37,8 +37,7 @@ public class Server extends Thread {
 
     public Server(Socket s) throws IOException {
         this.socket = s;
-        out_to_client = new DataOutputStream(socket.getOutputStream());
-        out_to_client.flush();
+
         in_from_client = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         out_to_client_object = new ObjectOutputStream(socket.getOutputStream());
@@ -69,10 +68,10 @@ public class Server extends Thread {
             Server svr = new Server(connected);
             server_list.add(svr);
             svr.start();
+
+            
         }
-        for(Server s: server_list){
-            s.interrupt();
-        }
+
         
     }
 
@@ -99,36 +98,36 @@ public class Server extends Thread {
                 if(users.contains(msg_in.getUser())){
                     msg_out.setCommand(Command.ERROR);
                     msg_out.setArgs(TerminalText.USER_LOGGED.getText(),0);
-                    ALPMessage.send(out_to_client,msg_out);
+                    ALPMessage.sendObject(out_to_client_object,msg_out);
                 }else if(user_pass.containsKey(msg_in.getUser())){
                     System.out.println("Need Password");
                     System.out.println(msg_in.getUser());
                     msg_out.setCommand(Command.NEED_PASSWORD);
-                    ALPMessage.send(out_to_client,msg_out);                    
-                    ALPMessage.read(in_from_client,msg_in);
+                    ALPMessage.sendObject(out_to_client_object,msg_out);
+                    ALPMessage.readObject(in_from_client_object,msg_in);
                     if(user_pass.get(msg_in.getUser()).equals(msg_in.getArgs(0))){
                         System.out.println("Correct Password");
                         logged_in = true;
                         users.add(msg_in.getUser());
                         msg_out.setCommand(Command.LOGIN_COMPLETE);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }else{
                         System.out.println("Wrong Password");
                         msg_out.setCommand(Command.LOGIN_FAIL);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
                 }else{
                     System.out.println("New User");
                     msg_out.setCommand(Command.NEW_USER);
-                    ALPMessage.send(out_to_client,msg_out);
-                    ALPMessage.read(in_from_client,msg_in);
+                    ALPMessage.sendObject(out_to_client_object,msg_out);
+                    ALPMessage.readObject(in_from_client_object,msg_in);
                     credentials.add(msg_in.getUser()+ " " + msg_in.getArgs(0));
                     user_pass.put(msg_in.getUser(), msg_in.getArgs(0));
                     writeOutString(cred_path_name, credentials);
                     logged_in = true;
                     users.add(msg_in.getUser());
                     msg_out.setCommand(Command.LOGIN_COMPLETE);
-                    ALPMessage.send(out_to_client,msg_out);
+                    ALPMessage.sendObject(out_to_client_object,msg_out);
 
 
                 }
@@ -136,7 +135,7 @@ public class Server extends Thread {
 
             System.out.println("LOGGED IN");
             while(logged_in){
-                ALPMessage.read(in_from_client,msg_in);
+                ALPMessage.readObject(in_from_client_object,msg_in);
                 System.out.println("GOT MESSAGE");
 
 
@@ -155,12 +154,12 @@ public class Server extends Thread {
                         writeOutString(pathname, text);
                         msg_out.setCommand(Command.SUCCESS);
                         threads.add(new ThreadFile(msg_in.getUser(), threadname));
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }else{
                         System.out.println("Existing thread at: " + pathname);
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.FILE_EXIST.getText(pathname), 0);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
 
                     }
                 }else if(msg_in.getCommand().equals(Command.RMV.toString())){
@@ -169,13 +168,13 @@ public class Server extends Thread {
                     if(threads.indexOf(remove) == -1){
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }else{
                         File remove_thread = new File(threads.get(threads.indexOf(remove)).getPathname());
                         remove_thread.delete();
                         threads.remove(remove);
                         msg_out.setCommand(Command.SUCCESS);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
 
                 
@@ -191,11 +190,11 @@ public class Server extends Thread {
                         
                         writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                         msg_out.setCommand(Command.SUCCESS);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
                 
                 // LST
@@ -207,7 +206,7 @@ public class Server extends Thread {
                         threadnames.add(th.getThreadname());
                     }
                     msg_out.setArgs(String.join(ThreadFile.thread_split_key,threadnames),1);
-                    ALPMessage.send(out_to_client,msg_out);
+                    ALPMessage.sendObject(out_to_client_object,msg_out);
                 
                 // EDT threadname messagenumber message
                 }else if(msg_in.getCommand().equals(Command.EDT.toString())){
@@ -221,18 +220,18 @@ public class Server extends Thread {
                         if(selected_thread.editMessage(msg_in.getUser(), msg_in.getArgs(2), Integer.parseInt(msg_in.getArgs(1)))==-1){
                             msg_out.setCommand(Command.ERROR);
                             msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
-                            ALPMessage.send(out_to_client,msg_out);
+                            ALPMessage.sendObject(out_to_client_object,msg_out);
                         }else{
                         // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                             writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                             msg_out.setCommand(Command.SUCCESS);
-                            ALPMessage.send(out_to_client,msg_out);
+                            ALPMessage.sendObject(out_to_client_object,msg_out);
                         }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
                 }else if(msg_in.getCommand().equals(Command.DLT.toString())){
                     if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
@@ -245,18 +244,18 @@ public class Server extends Thread {
                         if(selected_thread.deleteMessage(msg_in.getUser(),Integer.parseInt(msg_in.getArgs(1)))==-1){
                             msg_out.setCommand(Command.ERROR);
                             msg_out.setArgs(TerminalText.BAD_DLT.getText(),0);
-                            ALPMessage.send(out_to_client,msg_out);
+                            ALPMessage.sendObject(out_to_client_object,msg_out);
                         }else{
                         // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                             writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                             msg_out.setCommand(Command.SUCCESS);
-                            ALPMessage.send(out_to_client,msg_out);
+                            ALPMessage.sendObject(out_to_client_object,msg_out);
                         }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
                 }else if(msg_in.getCommand().equals(Command.RDT.toString())){
                     if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
@@ -270,24 +269,41 @@ public class Server extends Thread {
                         msg_out.setCommand(Command.RDT);
                         msg_out.setArgs(String.valueOf(read.size()),0);
                         msg_out.setArgs(String.join(ThreadFile.thread_split_key,read),1);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
 
 
                         // if(selected_thread.deleteMessage(msg_in.getUser(),Integer.parseInt(msg_in.getArgs(1)))==-1){
                         //     msg_out.setCommand(Command.ERROR);
                         //     msg_out.setArgs(TerminalText.BAD_EDT.getText(),0);
-                        //     ALPMessage.send(out_to_client,msg_out);
+                        //     ALPMessage.sendObject(out_to_client_object,msg_out);
                         // }else{
                         // // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                         //     writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
                         //     msg_out.setCommand(Command.SUCCESS);
-                        //     ALPMessage.send(out_to_client,msg_out);
+                        //     ALPMessage.sendObject(out_to_client_object,msg_out);
                         // }
                     }else{
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
-                        ALPMessage.send(out_to_client,msg_out);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
+                    }
+                }else if(msg_in.getCommand().equals(Command.UPD.toString())){
+                    if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
+                            
+                        ThreadFile selected_thread = threads.get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
+                        // String pathname = "./" + msg_in.getArgs(0) + ".txt";
+                        // List<String> file_contents = readInText(pathname);
+                        selected_thread.addMessage(msg_in.getArgs(1),msg_in.getUser());
+                        // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
+                        
+                        writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
+                        msg_out.setCommand(Command.SUCCESS);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
+                    }else{
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
                 }
             }
@@ -296,10 +312,14 @@ public class Server extends Thread {
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ClassNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (SocketException e){
+            System.out.println("SOCKET ERROR");
+        } catch (EOFException e){
+            System.out.println("EOF ERROR");
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

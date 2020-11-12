@@ -177,22 +177,28 @@ public class ALPMessage implements Serializable{
     }
 
     public static void sendObject(ObjectOutputStream out, ALPMessage msg) throws IOException {
+        System.out.println("MSGOUT:" +msg);
         out.writeObject(msg);
         out.flush();
+        out.reset();
+        
     }
 
     public static void readObject(ObjectInputStream in, ALPMessage msg) throws ClassNotFoundException, IOException {
         Object o = in.readObject();
-        System.out.print(o);
         ALPMessage temp = (ALPMessage)o;
+        // System.out.println("TEMP:" +temp);
         msg.setUser(temp.getUser());
         msg.setArgs(temp.getArgs());
         msg.setCommand(temp.getCommand());
         msg.setPayload(temp.getPayload());
+        System.out.println("MSGIN:" +msg);
         
 
     }
 
+
+    
 
 }
 
