@@ -242,7 +242,16 @@ public class Client  {
 
 
 
-
+                }else if(command.equals(Command.XIT.toString())){
+                    if(cmd_input.size() == 1){
+                        msg_out.setCommand(Command.XIT);
+                        ALPMessage.sendObject(out_to_server_object, msg_out);
+                        logged_in = false;
+                        alive = false;
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
+                
                 }else{
                     System.out.println(TerminalText.INV_CMD.getText());                    
                 }
@@ -289,7 +298,7 @@ public class Client  {
             }
             
             alive = false;
-
+            System.out.println("DONE");
 
 
         }

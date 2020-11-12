@@ -70,6 +70,7 @@ public class Server extends Thread {
             Server svr = new Server(connected);
             server_list.add(svr);
             svr.start();
+            
 
             
         }
@@ -330,6 +331,8 @@ public class Server extends Thread {
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
                         ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
+                }else if(msg_in.getCommand().equals(Command.XIT.toString())){
+                    logged_in = false;
                 }
                 
             }
@@ -352,7 +355,7 @@ public class Server extends Thread {
 
 
 
-
+        System.out.println("THREAD DEAD");
 
 
     }

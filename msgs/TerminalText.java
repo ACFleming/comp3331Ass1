@@ -8,7 +8,7 @@ public enum TerminalText {
     BAD_THREADNAME("Invalid/illegal thread specified"),
     CANT_RMV("Thread %s cannot be removed"),
     CLIENT_CNCT("Client connected"),
-    CMD_PROMPT("Enter one of the following commands:(CRT, DLT, EDT, LST, MSG, RDT, RMV) :"),
+    CMD_PROMPT("Enter one of the following commands:(CRT, DLT, DNW, EDT, LST, MSG, RDT, RMV, UPD, XIT) :"),
     EMPTY_THREAD("Thread %s is empty"),
     FILE_DWN("%s downloaded from thread %s"),
     FILE_EXIST("File %s already exists"),
