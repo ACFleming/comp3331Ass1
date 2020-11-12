@@ -46,6 +46,11 @@ public enum TerminalText {
     public String getText(Object args){
         
         return String.format(this.text, args);
+
+    }
+
+    public String getText(Object arg0, Object arg1){
+        return String.format(this.text, arg0, arg1);
     }
 
     public String getText(){

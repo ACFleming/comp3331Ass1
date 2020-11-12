@@ -17,6 +17,7 @@ public class ThreadFile {
     private String pathname;
     private int msg_number;
     List<ThreadItem> contents;
+    List<String> files;
 
 
     public ThreadFile() {
@@ -27,6 +28,7 @@ public class ThreadFile {
         this.threadname = threadname;
         this.pathname = "./" + threadname + ".txt";
         this.contents = new ArrayList<ThreadItem>();
+        this.files = new ArrayList<String>();
         this.msg_number = 1;
         addItem(user,user);
     }
@@ -41,6 +43,14 @@ public class ThreadFile {
     //     contents.set(new ThreadMessage(message,);
 
     // }
+
+    public void addFile(String filename){
+        files.add(filename);
+    }
+
+    public List<String> getFileList(){
+        return this.files;
+    }
 
     public List<String> readThread(){
         List<String> read = new ArrayList<String>();

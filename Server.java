@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -292,9 +294,12 @@ public class Server extends Thread {
                     if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
                             
                         ThreadFile selected_thread = threads.get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
-                        // String pathname = "./" + msg_in.getArgs(0) + ".txt";
+                        String pathname = "./" + msg_in.getArgs(0) + "-" + msg_in.getArgs(1);
                         // List<String> file_contents = readInText(pathname);
-                        selected_thread.addMessage(msg_in.getArgs(1),msg_in.getUser());
+                        
+                        Files.write(Paths.get(pathname),msg_in.getPayload());
+                        selected_thread.addFile(msg_in.getArgs(1));
+                        selected_thread.addItem(msg_in.getUser() + " uploaded " + msg_in.getArgs(1),msg_in.getUser());
                         // file_contents.add(msg_in.getUser() +": " + msg_in.getArgs(1));
                         
                         writeOutString(selected_thread.getPathname(), selected_thread.getMessages());
@@ -305,7 +310,28 @@ public class Server extends Thread {
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
                         ALPMessage.sendObject(out_to_client_object,msg_out);
                     }
+                }else if(msg_in.getCommand().equals(Command.DWN.toString())){
+                    if(threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))){
+                            
+                        ThreadFile selected_thread = threads.get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
+                        if(selected_thread.getFileList().contains(msg_in.getArgs(1))){
+                            String pathname = "./" + msg_in.getArgs(0) + "-" + msg_in.getArgs(1);
+                            msg_out.setCommand(Command.DWN);
+                            msg_out.setArgs(msg_in.getArgs(1),0);
+                            msg_out.setPayload(Files.readAllBytes(Paths.get(pathname)));
+                            ALPMessage.sendObject(out_to_client_object,msg_out);
+                        }else{
+                            msg_out.setCommand(Command.ERROR);
+                            msg_out.setArgs(TerminalText.BAD_FILE.getText(msg_in.getArgs(0),msg_in.getArgs(1)), 0);
+                            ALPMessage.sendObject(out_to_client_object,msg_out);
+                        }
+                    }else{
+                        msg_out.setCommand(Command.ERROR);
+                        msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                        ALPMessage.sendObject(out_to_client_object,msg_out);
+                    }
                 }
+                
             }
 
 

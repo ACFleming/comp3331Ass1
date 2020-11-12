@@ -28,7 +28,7 @@ public class Client  {
         Socket client_socket = new Socket(args[0], Integer.parseInt(args[1]));
         BufferedReader in_from_user = new BufferedReader(new InputStreamReader(System.in));
 
-
+        
 
         ObjectOutputStream out_to_server_object = new ObjectOutputStream(client_socket.getOutputStream());
         out_to_server_object.flush();
@@ -223,8 +223,21 @@ public class Client  {
                     }
                 
                 
-
-
+                // DWN threadtitle filename
+                }else if(command.equals(Command.DWN.toString())){
+                    if(cmd_input.size() == 3){
+                        if(cmd_input.get(1).equals("credentials")){
+                            System.out.println(TerminalText.BAD_THREADNAME.getText());
+                        }else{
+                            msg_out.setCommand(Command.DWN);
+                            msg_out.setArgs(cmd_input.get(1),0);
+                            msg_out.setArgs(cmd_input.get(2),1);
+                            ALPMessage.sendObject(out_to_server_object, msg_out);
+                            waiting = true;
+                        }
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
 
 
 
@@ -238,6 +251,7 @@ public class Client  {
                 //Responses
                 if(waiting){
                     ALPMessage.readObject(in_from_server_object, msg_in);
+                    System.out.println(msg_in.getCommand().toString());
                     if(msg_in.getCommand().equals(Command.ERROR.toString())){
                         System.out.println(msg_in.getArgs(0));
                     }else if (msg_in.getCommand().equals(Command.LST.toString())){
@@ -265,6 +279,9 @@ public class Client  {
     
                             }
                         }
+                    }else if(msg_in.getCommand().equals(Command.DWN.toString())){
+                        System.out.println("DOWNLOAD");
+                        Files.write(Paths.get(msg_in.getArgs(0)),msg_in.getPayload());
                     }
                 }
                 waiting = false;
