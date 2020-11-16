@@ -192,7 +192,7 @@ public class Server extends Thread {
 
                     // MSG threadname message
                 } else if (msg_in.getCommand().equals(Command.MSG.toString())) {
-                    sleep(2000);
+                    
                     if (threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))) {
 
                         ThreadFile selected_thread = threads
