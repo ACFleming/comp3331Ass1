@@ -22,7 +22,7 @@ public enum TerminalText {
     NO_THREADS("No threads to list"),
     PSWD_FAIL("Incorrect Password"),
     PSWD_PROMPT("Enter password: "),
-    SRVR_SHT("Server shutting down"),
+    SRVR_SHT("\nServer shutting down"),
     SRVR_WAIT("Waiting For clients"),
     THREAD_CRT("Thread %s created"),
     THREAD_EDT("Message has been edited"),

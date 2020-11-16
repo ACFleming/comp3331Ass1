@@ -26,7 +26,7 @@ public class ThreadFile {
     public ThreadFile(String user, String threadname) {
         this.user = user;
         this.threadname = threadname;
-        this.pathname = "./" + threadname + ".txt";
+        this.pathname = "./" + threadname;
         this.contents = new ArrayList<ThreadItem>();
         this.files = new ArrayList<String>();
         this.msg_number = 1;

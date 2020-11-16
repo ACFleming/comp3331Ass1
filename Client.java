@@ -1,9 +1,7 @@
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import msgs.*;
@@ -46,7 +44,25 @@ public class Client  {
             while(!logged_in){
                 System.out.print(TerminalText.USNM_PROMPT.getText());
                 msg_out.setCommand(Command.LOGIN_USERNAME);
-                msg_out.setUser(in_from_user.readLine());
+
+                while(!in_from_user.ready()){
+                    try {
+                        ALPMessage.readObject(in_from_server_object, msg_in);
+                    } catch (SocketTimeoutException e) {
+                        continue;
+                    } catch (IOException e){
+                        System.out.println(TerminalText.SRVR_SHT.getText());
+                        client_socket.close();
+                        System.exit(1);
+                    }
+                    if(msg_in.getCommand().equals(Command.SHT.toString())){
+                        System.out.println(TerminalText.SRVR_SHT.getText());
+                        client_socket.close();
+                        System.exit(1);
+                    }
+                    
+                }
+                msg_out.setUser(in_from_user.readLine().split(" ")[0]);
                 if(msg_out.getUser().isBlank()){
                     System.out.println(TerminalText.INV_CHAR.getText());
                     continue;
@@ -61,7 +77,23 @@ public class Client  {
                     String pass;
                     do {
                         System.out.print(TerminalText.PSWD_PROMPT.getText());
-                        
+                        while(!in_from_user.ready()){
+                            try {
+                                ALPMessage.readObject(in_from_server_object, msg_in);
+                            } catch (SocketTimeoutException e) {
+                                continue;
+                            } catch (IOException e){
+                                System.out.println(TerminalText.SRVR_SHT.getText());
+                                client_socket.close();
+                                System.exit(1);
+                            }
+                            if(msg_in.getCommand().equals(Command.SHT.toString())){
+                                System.out.println(TerminalText.SRVR_SHT.getText());
+                                client_socket.close();
+                                System.exit(1);
+                            }
+                            
+                        }
                         pass = in_from_user.readLine();
                         if(!pass.isBlank() ||  !msg_in.getCommand().equals(Command.NEW_USER.toString())){
                             break;
@@ -86,7 +118,6 @@ public class Client  {
                     System.out.println(msg_in.getArgs(0));
                 }
             }
-            String message = "";
             Boolean waiting = false;
             while(logged_in){
                 System.out.println(TerminalText.CMD_PROMPT.getText());
@@ -97,10 +128,12 @@ public class Client  {
                         continue;
                     } catch (IOException e){
                         System.out.println(TerminalText.SRVR_SHT.getText());
+                        client_socket.close();
                         System.exit(1);
                     }
                     if(msg_in.getCommand().equals(Command.SHT.toString())){
                         System.out.println(TerminalText.SRVR_SHT.getText());
+                        client_socket.close();
                         System.exit(1);
                     }
                     
@@ -262,8 +295,8 @@ public class Client  {
                     if(cmd_input.size() == 1){
                         msg_out.setCommand(Command.XIT);
                         ALPMessage.sendObject(out_to_server_object, msg_out);
-                        // logged_in = false;
-                        // alive = false;
+                        logged_in = false;
+                        alive = false;
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
                     }
@@ -286,11 +319,20 @@ public class Client  {
 
                 
                 //Responses
-                if(waiting){
-                    ALPMessage.readObject(in_from_server_object, msg_in);
+                while(waiting){
+                    try {
+                        ALPMessage.readObject(in_from_server_object, msg_in);
+                    } catch (SocketTimeoutException e) {
+                        continue;
+                    } catch (IOException e){
+                        System.out.println(TerminalText.SRVR_SHT.getText());
+                        client_socket.close();
+                        System.exit(1);
+                    }
                     System.out.println(msg_in.getCommand().toString());
                     if(msg_in.getCommand().equals(Command.ERROR.toString())){
                         System.out.println(msg_in.getArgs(0));
+                        waiting = false;
                     }else if (msg_in.getCommand().equals(Command.LST.toString())){
                         int num_threads = Integer.parseInt(msg_in.getArgs(0));
                         if(num_threads == 0){
@@ -303,6 +345,7 @@ public class Client  {
     
                             }
                         }
+                        waiting = false;
 
                     }else if(msg_in.getCommand().equals(Command.RDT.toString())){
                         int num_lines = Integer.parseInt(msg_in.getArgs(0));
@@ -316,12 +359,20 @@ public class Client  {
     
                             }
                         }
+                        waiting = false;
                     }else if(msg_in.getCommand().equals(Command.DWN.toString())){
                         System.out.println("DOWNLOAD");
                         Files.write(Paths.get(msg_in.getArgs(0)),msg_in.getPayload());
+                        waiting = false;
+                    }else if(msg_in.getCommand().equals(Command.SHT.toString())){
+                        waiting = false;
+                        System.out.println(TerminalText.SRVR_SHT.getText());
+                        client_socket.close();
+                        System.exit(1);
                     }
+                    waiting = false;
                 }
-                waiting = false;
+                
 
             }
             

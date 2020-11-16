@@ -8,6 +8,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.locks.ReentrantLock;
 
 import msgs.*;
 import thread.ThreadFile;
@@ -20,13 +21,12 @@ public class Server extends Thread {
     private static List<ThreadFile> threads;
     private static List<String> users;
     private static String admin_pass;
+    static ReentrantLock syncLock = new ReentrantLock();
 
     public static String cred_path_name = "./credentials.txt";
 
     private boolean alive;
     private Socket socket;
-    private BufferedReader in_from_client;
-    private DataOutputStream out_to_client;
     private ObjectInputStream in_from_client_object;
     private ObjectOutputStream out_to_client_object;
     private ALPMessage msg_out = new ALPMessage();
@@ -35,7 +35,6 @@ public class Server extends Thread {
     public Server(Socket s) throws IOException {
         this.socket = s;
 
-        in_from_client = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         out_to_client_object = new ObjectOutputStream(socket.getOutputStream());
         out_to_client_object.flush();
@@ -103,6 +102,7 @@ public class Server extends Thread {
                     ALPMessage.sendObject(out_to_client_object, msg_out);
                     System.exit(1);
                 }
+                syncLock.lock();
                 if (users.contains(msg_in.getUser())) {
                     msg_out.setCommand(Command.ERROR);
                     msg_out.setArgs(TerminalText.USER_LOGGED.getText(), 0);
@@ -139,9 +139,10 @@ public class Server extends Thread {
 
                 }
             }
-
+            
             System.out.println("LOGGED IN");
             while (logged_in) {
+                syncLock.unlock();
                 try {
                     ALPMessage.readObject(in_from_client_object, msg_in);
                 } catch (SocketTimeoutException e) {
@@ -149,13 +150,14 @@ public class Server extends Thread {
                 }
 
                 System.out.println("GOT MESSAGE");
+                syncLock.lock();
 
                 // BIG IF SWITCH STATEMENT
                 // CRT threadname
                 if (msg_in.getCommand().equals(Command.CRT.toString())) {
 
                     String threadname = msg_in.getArgs(0);
-                    String pathname = "./" + threadname + ".txt";
+                    String pathname = "./" + threadname;
 
                     File new_thread = new File(pathname);
                     if (new_thread.createNewFile()) {
@@ -190,6 +192,7 @@ public class Server extends Thread {
 
                     // MSG threadname message
                 } else if (msg_in.getCommand().equals(Command.MSG.toString())) {
+                    sleep(2000);
                     if (threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))) {
 
                         ThreadFile selected_thread = threads
@@ -272,6 +275,8 @@ public class Server extends Thread {
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
                         ALPMessage.sendObject(out_to_client_object, msg_out);
                     }
+
+                // RDT
                 } else if (msg_in.getCommand().equals(Command.RDT.toString())) {
                     if (threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))) {
 
@@ -337,7 +342,7 @@ public class Server extends Thread {
                             ALPMessage.sendObject(out_to_client_object, msg_out);
                         } else {
                             msg_out.setCommand(Command.ERROR);
-                            msg_out.setArgs(TerminalText.BAD_FILE.getText(msg_in.getArgs(0), msg_in.getArgs(1)), 0);
+                            msg_out.setArgs(TerminalText.BAD_FILE.getText(msg_in.getArgs(1), msg_in.getArgs(0)), 0);
                             ALPMessage.sendObject(out_to_client_object, msg_out);
                         }
                     } else {
@@ -347,11 +352,13 @@ public class Server extends Thread {
                     }
                 } else if (msg_in.getCommand().equals(Command.XIT.toString())) {
                     logged_in = false;
+                    users.remove(msg_in.getUser());
                 }else if(msg_in.getCommand().equals(Command.SHT.toString())){
                     System.out.println(admin_pass);
                     if(msg_in.getArgs(0).equals(admin_pass)){
                         msg_out.setCommand(Command.SHT);
                         ALPMessage.sendObject(out_to_client_object, msg_out);
+                        shutdown = true;
                         logged_in = false;
                     }else{
                         msg_out.setCommand(Command.ERROR);
@@ -375,17 +382,23 @@ public class Server extends Thread {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-
-        System.out.println("THREAD DEAD");
-        msg_out.setCommand(Command.SHT);
-        try {
-            ALPMessage.sendObject(out_to_client_object, msg_out);
-        } catch (IOException e) {
+        } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        System.exit(1);
+
+        System.out.println("THREAD DEAD");
+        if(shutdown){
+            msg_out.setCommand(Command.SHT);
+            try {
+                ALPMessage.sendObject(out_to_client_object, msg_out);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            System.exit(1);
+        }
+
 
     }
 
