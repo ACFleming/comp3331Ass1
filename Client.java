@@ -28,7 +28,7 @@ public class Client  {
         Socket client_socket = new Socket(args[0], Integer.parseInt(args[1]));
         BufferedReader in_from_user = new BufferedReader(new InputStreamReader(System.in));
 
-        
+        client_socket.setSoTimeout(500);
 
         ObjectOutputStream out_to_server_object = new ObjectOutputStream(client_socket.getOutputStream());
         out_to_server_object.flush();
@@ -90,7 +90,23 @@ public class Client  {
             Boolean waiting = false;
             while(logged_in){
                 System.out.println(TerminalText.CMD_PROMPT.getText());
-                List<String> cmd_input =  Arrays.asList(in_from_user.readLine().split(" "));
+                while(!in_from_user.ready()){
+                    try {
+                        ALPMessage.readObject(in_from_server_object, msg_in);
+                    } catch (SocketTimeoutException e) {
+                        continue;
+                    } catch (IOException e){
+                        System.out.println(TerminalText.SRVR_SHT.getText());
+                        System.exit(1);
+                    }
+                    if(msg_in.getCommand().equals(Command.SHT.toString())){
+                        System.out.println(TerminalText.SRVR_SHT.getText());
+                        System.exit(1);
+                    }
+                    
+                }
+                String cmd  = in_from_user.readLine();
+                List<String> cmd_input =  Arrays.asList(cmd.split(" "));
 
                 //Commands
 
@@ -241,17 +257,29 @@ public class Client  {
 
 
 
-
+                // XIT 
                 }else if(command.equals(Command.XIT.toString())){
                     if(cmd_input.size() == 1){
                         msg_out.setCommand(Command.XIT);
                         ALPMessage.sendObject(out_to_server_object, msg_out);
-                        logged_in = false;
-                        alive = false;
+                        // logged_in = false;
+                        // alive = false;
                     }else{
                         System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
                     }
-                
+
+                // SHT password
+                }else if(command.equals(Command.SHT.toString())){
+                    if(cmd_input.size() == 2){
+                        msg_out.setCommand(Command.SHT);
+                        msg_out.setArgs(cmd_input.get(1),0);
+                        ALPMessage.sendObject(out_to_server_object, msg_out);
+                        waiting = true;
+                        // logged_in = false;
+                        // alive = false;
+                    }else{
+                        System.out.println(TerminalText.BAD_SYNTAX.getText(cmd_input.get(0)));
+                    }
                 }else{
                     System.out.println(TerminalText.INV_CMD.getText());                    
                 }
@@ -302,7 +330,7 @@ public class Client  {
 
 
         }
-        client_socket.close();
+        
 
     }
 
