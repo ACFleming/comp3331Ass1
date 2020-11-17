@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import msgs.*;
 import thread.ThreadFile;
+import thread.ThreadItem;
 
 public class Server extends Thread {
 
@@ -34,7 +35,6 @@ public class Server extends Thread {
 
     public Server(Socket s) throws IOException {
         this.socket = s;
-
 
         out_to_client_object = new ObjectOutputStream(socket.getOutputStream());
         out_to_client_object.flush();
@@ -92,9 +92,11 @@ public class Server extends Thread {
                 // TODO: handle exception
             }
             while (!logged_in) {
+                
                 try {
                     ALPMessage.readObject(in_from_client_object, msg_in);
                 } catch (SocketTimeoutException e) {
+                    System.out.println("BLOCKING");
                     continue;
                 }
                 if (msg_in.getCommand().equals(Command.SHT.toString())) {
@@ -102,6 +104,8 @@ public class Server extends Thread {
                     ALPMessage.sendObject(out_to_client_object, msg_out);
                     System.exit(1);
                 }
+                System.out.print(syncLock.tryLock());
+                System.out.println(syncLock.getQueueLength());
                 syncLock.lock();
                 if (users.contains(msg_in.getUser())) {
                     msg_out.setCommand(Command.ERROR);
@@ -138,8 +142,9 @@ public class Server extends Thread {
                     ALPMessage.sendObject(out_to_client_object, msg_out);
 
                 }
+                syncLock.unlock();
             }
-            
+
             System.out.println("LOGGED IN");
             while (logged_in) {
                 syncLock.unlock();
@@ -175,24 +180,48 @@ public class Server extends Thread {
                         ALPMessage.sendObject(out_to_client_object, msg_out);
 
                     }
-                } else if (msg_in.getCommand().equals(Command.RMV.toString())) {
-                    ThreadFile remove = new ThreadFile(null, msg_in.getArgs(0));
 
-                    if (threads.indexOf(remove) == -1) {
+                    // RMV threadname
+                } else if (msg_in.getCommand().equals(Command.RMV.toString())) {
+
+                    if (threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))) {
+
+                        ThreadFile selected_thread = threads
+                                .get(threads.indexOf(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0))));
+                        List<String> files = selected_thread.getFileList();
+                        for (int i = 0; i < files.size(); i++) {
+                            File remove_file = new File("./" + msg_in.getArgs(0) + "-" + files.get(i));
+                            remove_file.delete();
+                        }
+                        File remove_thread = new File(selected_thread.getPathname());
+                        remove_thread.delete();
+                        threads.remove(selected_thread);
+                        msg_out.setCommand(Command.SUCCESS);
+                        ALPMessage.sendObject(out_to_client_object, msg_out);
+                    } else {
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
                         ALPMessage.sendObject(out_to_client_object, msg_out);
-                    } else {
-                        File remove_thread = new File(threads.get(threads.indexOf(remove)).getPathname());
-                        remove_thread.delete();
-                        threads.remove(remove);
-                        msg_out.setCommand(Command.SUCCESS);
-                        ALPMessage.sendObject(out_to_client_object, msg_out);
                     }
+
+                    // if (threads.indexOf(remove) == -1) {
+                    // msg_out.setCommand(Command.ERROR);
+                    // msg_out.setArgs(TerminalText.BAD_THREADNAME.getText(), 0);
+                    // ALPMessage.sendObject(out_to_client_object, msg_out);
+                    // } else {
+                    // ThreadFile specified_thread =
+                    // File remove_thread = new
+                    // File(threads.get(threads.indexOf(remove)).getPathname());
+                    // for(ThreadItem item: r.)
+                    // remove_thread.delete();
+                    // threads.remove(remove);
+                    // msg_out.setCommand(Command.SUCCESS);
+                    // ALPMessage.sendObject(out_to_client_object, msg_out);
+                    // }
 
                     // MSG threadname message
                 } else if (msg_in.getCommand().equals(Command.MSG.toString())) {
-                    
+
                     if (threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))) {
 
                         ThreadFile selected_thread = threads
@@ -276,7 +305,7 @@ public class Server extends Thread {
                         ALPMessage.sendObject(out_to_client_object, msg_out);
                     }
 
-                // RDT
+                    // RDT
                 } else if (msg_in.getCommand().equals(Command.RDT.toString())) {
                     if (threads.contains(new ThreadFile(msg_in.getUser(), msg_in.getArgs(0)))) {
 
@@ -353,14 +382,15 @@ public class Server extends Thread {
                 } else if (msg_in.getCommand().equals(Command.XIT.toString())) {
                     logged_in = false;
                     users.remove(msg_in.getUser());
-                }else if(msg_in.getCommand().equals(Command.SHT.toString())){
+
+                } else if (msg_in.getCommand().equals(Command.SHT.toString())) {
                     System.out.println(admin_pass);
-                    if(msg_in.getArgs(0).equals(admin_pass)){
+                    if (msg_in.getArgs(0).equals(admin_pass)) {
                         msg_out.setCommand(Command.SHT);
                         ALPMessage.sendObject(out_to_client_object, msg_out);
                         shutdown = true;
                         logged_in = false;
-                    }else{
+                    } else {
                         msg_out.setCommand(Command.ERROR);
                         msg_out.setArgs(TerminalText.PSWD_FAIL.getText(), 0);
                         ALPMessage.sendObject(out_to_client_object, msg_out);
@@ -382,19 +412,24 @@ public class Server extends Thread {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
-
+        syncLock.unlock();
+        
         System.out.println("THREAD DEAD");
+        System.out.print(syncLock.isHeldByCurrentThread());
+        try {
+            socket.close();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         if(shutdown){
             msg_out.setCommand(Command.SHT);
             try {
                 ALPMessage.sendObject(out_to_client_object, msg_out);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                
+                
             }
             System.exit(1);
         }

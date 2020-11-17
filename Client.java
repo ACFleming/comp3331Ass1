@@ -41,9 +41,10 @@ public class Client  {
 
             //LOGIN
             boolean logged_in = false;
+            System.out.print(TerminalText.USNM_PROMPT.getText());
+            msg_out.setCommand(Command.LOGIN_USERNAME);
             while(!logged_in){
-                System.out.print(TerminalText.USNM_PROMPT.getText());
-                msg_out.setCommand(Command.LOGIN_USERNAME);
+
 
                 while(!in_from_user.ready()){
                     try {
@@ -69,7 +70,15 @@ public class Client  {
                 }
 
                 ALPMessage.sendObject(out_to_server_object, msg_out);
-                ALPMessage.readObject(in_from_server_object, msg_in);
+                try {
+                    ALPMessage.readObject(in_from_server_object, msg_in);
+                } catch (SocketTimeoutException e) {
+                    continue;
+                } catch (IOException e){
+                    System.out.println(TerminalText.SRVR_SHT.getText());
+                    client_socket.close();
+                    System.exit(1);
+                }
                 //ALPMessage.sendObject(out_to_server_object, msg_out);
                 // ALPMessage.readObject(in_from_server_object, msg_in);
                 if(msg_in.getCommand().equals(Command.NEED_PASSWORD.toString()) || msg_in.getCommand().equals(Command.NEW_USER.toString())){
@@ -116,6 +125,7 @@ public class Client  {
 
                 }else if (msg_in.getCommand().equals(Command.ERROR.toString())){
                     System.out.println(msg_in.getArgs(0));
+                    System.out.print(TerminalText.USNM_PROMPT.getText());
                 }
             }
             Boolean waiting = false;
