@@ -387,6 +387,40 @@ public class Server extends Thread {
                     System.out.println(admin_pass);
                     if (msg_in.getArgs(0).equals(admin_pass)) {
                         msg_out.setCommand(Command.SHT);
+                        Iterator<ThreadFile> th_it = threads.iterator();
+                        while(th_it.hasNext()){
+                            ThreadFile selected_thread = th_it.next();
+                            Iterator<String> file_it = selected_thread.getFileList().iterator();
+                            while(file_it.hasNext()){
+                                String pathname = "./" + selected_thread.getThreadname() + "-" + file_it.next();
+                                System.out.println("FILE PATH NAME " + pathname);
+                                File remove_file = new File(pathname);
+                                remove_file.delete();
+                                file_it.remove();
+                            }
+                            File remove_file = new File(selected_thread.getPathname());
+                            remove_file.delete();
+                            th_it.remove();
+                        }
+                        File remove_credentials = new File(cred_path_name);
+                        remove_credentials.delete();
+
+
+                        // for(int i = 0; i < threads.size(); i ++){
+                        //     ThreadFile selected_thread = threads.get(i);
+                        //     List<String> files = selected_thread.getFileList();
+                        //     System.out.println(files.size());
+                        //     for (int j = 0; i < files.size(); j++) {
+                        //         File remove_file = new File("./" + msg_in.getArgs(0) + "-" + files.get(j));
+                        //         remove_file.delete();
+                        //         System.out.println(files);
+                        //     }
+                        //     File remove_thread = new File(selected_thread.getPathname());
+                        //     remove_thread.delete();
+                        //     threads.remove(selected_thread);
+                        // }
+
+
                         ALPMessage.sendObject(out_to_client_object, msg_out);
                         shutdown = true;
                         logged_in = false;
