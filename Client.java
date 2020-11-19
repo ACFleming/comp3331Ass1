@@ -66,6 +66,7 @@ public class Client  {
                 msg_out.setUser(in_from_user.readLine().split(" ")[0]);
                 if(msg_out.getUser().isBlank()){
                     System.out.println(TerminalText.INV_CHAR.getText());
+                    System.out.print(TerminalText.USNM_PROMPT.getText());
                     continue;
                 }
 
@@ -120,7 +121,8 @@ public class Client  {
                         logged_in = true;
                         break;
                     }else if(msg_in.getCommand().equals(Command.LOGIN_FAIL.toString())){
-                        System.out.println(TerminalText.PSWD_FAIL);
+                        System.out.println(TerminalText.PSWD_FAIL.getText());
+                        System.out.print(TerminalText.USNM_PROMPT.getText());
                     }
 
                 }else if (msg_in.getCommand().equals(Command.ERROR.toString())){
@@ -130,7 +132,7 @@ public class Client  {
             }
             Boolean waiting = false;
             while(logged_in){
-                System.out.println(TerminalText.CMD_PROMPT.getText());
+                System.out.print(TerminalText.CMD_PROMPT.getText());
                 while(!in_from_user.ready()){
                     try {
                         ALPMessage.readObject(in_from_server_object, msg_in);

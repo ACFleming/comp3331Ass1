@@ -1,12 +1,14 @@
 package msgs;
 
 public enum TerminalText {
-    BAD_DLT("Invalid/Illegal message to delete"),
-    BAD_EDT("Invalid/Illegal message to edit"),
+    BAD_DLT("Invalid message number to delete"),
+    BAD_EDT("Invalid message number to edit"),
     BAD_FILE("%s does not exist in thread %s"),
     BAD_SYNTAX("Incorrect syntax for %s"),
     BAD_THREADNAME("Invalid/illegal thread specified"),
-    CANT_RMV("Thread %s cannot be removed"),
+    CANT_RMV("Unable to remove thread. Threads can only be removed by owner."),
+    CANT_EDT("Unable to edit message. Messages can only be edited by owner."),
+    CANT_DLT("Unable to delete message. Messages can only be deleted by owner."),
     CLIENT_CNCT("Client connected"),
     CMD_PROMPT("Enter one of the following commands:(CRT, DLT, DNW, EDT, LST, MSG, RDT, RMV, SHT, UPD, XIT) :"),
     EMPTY_THREAD("Thread %s is empty"),

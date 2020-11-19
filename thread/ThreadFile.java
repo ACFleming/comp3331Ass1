@@ -63,8 +63,11 @@ public class ThreadFile {
 
     public int deleteMessage(String user, int number){
         ThreadMessage msg = getMessage(number);
-        if(msg == null || !msg.getUser().equals(user)){
+        if(msg == null ){
             return -1;
+        }
+        if(!msg.getUser().equals(user)){
+            return -2;
         }
         int index = contents.indexOf(msg);
         contents.remove(index);
@@ -91,8 +94,11 @@ public class ThreadFile {
 
     public int editMessage(String user, String message, int number){
         ThreadItem edit = getMessage(number);
-        if(edit == null || !edit.getUser().equals(user)){
+        if(edit == null ){
             return -1;
+        }
+        if(!edit.getUser().equals(user)){
+            return -2;
         }
         String[] separated = edit.getMessage().split(":");
         edit.setMessage(separated[0] + ": " +  message);
